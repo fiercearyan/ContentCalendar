@@ -158,6 +158,9 @@
   .cad { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
   .toast.show { opacity: 1; }
+  .sync { font-size: 12px; color: var(--muted); }
+  .sync.ok { color: var(--ok); }
+  .sync.bad { color: var(--bad); }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0 0; }
 
   @media (max-width: 700px) {
@@ -178,6 +181,7 @@
     <button data-view="settings">Settings</button>
   </nav>
   <div class="spacer"></div>
+  <span class="sync" id="sync"></span>
   <button class="btn" id="planBtn" title="Create placeholder slots for the next 14 days from each channel's posting days">Plan next 2 weeks</button>
   <button class="btn primary" id="newBtn">+ New post</button>
 </header>
@@ -280,6 +284,15 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="backdrop" id="lock">
+  <form class="modal" id="lockForm" style="max-width:380px;margin-top:12vh">
+    <h3>Content Calendar</h3>
+    <p style="color:var(--muted);margin:0 0 12px">Enter the passcode to load and sync your calendar. You only need to do this once per device.</p>
+    <div class="field"><input type="password" id="lockIn" placeholder="Passcode" autocomplete="current-password" style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px" /></div>
+    <div id="lockErr" style="color:var(--bad);font-size:12px;min-height:16px;margin-bottom:8px"></div>
+    <button class="btn primary" style="width:100%">Unlock</button>
+  </form>
+</div>
 
 <script>
 (() => {
@@ -322,14 +335,106 @@
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const s = JSON.parse(raw);
-        if (s && Array.isArray(s.items) && Array.isArray(s.channels)) return s;
+        if (s && Array.isArray(s.items) && Array.isArray(s.channels)) return fixState(s);
       }
     } catch (e) { /* storage unavailable or corrupt */ }
-    return { version: 1, channels: structuredClone(DEFAULT_CHANNELS), items: [] };
+    return fixState({ version: 1, channels: structuredClone(DEFAULT_CHANNELS), channelsAt: 0, items: [] });
   }
-  function save() {
+  function fixState(s) {
+    s.deleted = s.deleted || {};
+    s.channelsAt = s.channelsAt || 0;
+    s.items.forEach(i => { i.updatedAt = i.updatedAt || 1; });
+    return s;
+  }
+  function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
     catch (e) { toast('Could not save in this browser — export a backup'); }
+  }
+  function save() { persist(); schedulePush(); }
+  const touch = it => { it.updatedAt = Date.now(); return it; };
+  const tombstone = id => { state.deleted[id] = Date.now(); };
+
+  // Merge two states post-by-post (newest edit wins). Keep in step with merge() in api/data.js.
+  function merge(a, b) {
+    if (!a) return b;
+    if (!b) return a;
+    const deleted = { ...(a.deleted || {}) };
+    Object.entries(b.deleted || {}).forEach(([id, t]) => { deleted[id] = Math.max(deleted[id] || 0, t); });
+    const byId = {};
+    [...(a.items || []), ...(b.items || [])].forEach(it => {
+      const cur = byId[it.id];
+      if (!cur || (it.updatedAt || 0) > (cur.updatedAt || 0)) byId[it.id] = it;
+    });
+    const cutoff = Date.now() - 90 * 864e5;
+    Object.keys(deleted).forEach(id => { if (deleted[id] < cutoff) delete deleted[id]; });
+    const items = Object.values(byId).filter(it => !(deleted[it.id] >= (it.updatedAt || 0)));
+    const bNewer = (b.channelsAt || 0) >= (a.channelsAt || 0);
+    return { version: 1, channels: bNewer ? b.channels : a.channels, channelsAt: Math.max(a.channelsAt || 0, b.channelsAt || 0), items, deleted };
+  }
+
+  // ---------- cloud sync (Vercel function + Upstash Redis, same as streaks) ----------
+  const PASSK = 'contentCalendar.pass';
+  const online = location.protocol !== 'file:';
+  let pass = (() => { try { return localStorage.getItem(PASSK) || ''; } catch (e) { return ''; } })();
+  let pushT, syncing = false, dirty = false;
+  function setSync(text, cls = '') { const el = document.getElementById('sync'); if (el) { el.textContent = text; el.className = 'sync ' + cls; } }
+  async function api(method, body) {
+    const r = await fetch('/api/data', { method, headers: { 'x-passcode': pass, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(j.error || `HTTP ${r.status}`), { code: r.status });
+    return j;
+  }
+  function schedulePush() {
+    if (!online || !pass) return;
+    dirty = true; setSync('Saving…');
+    clearTimeout(pushT); pushT = setTimeout(push, 700);
+  }
+  async function push() {
+    if (!online || !pass) return;
+    if (syncing) { clearTimeout(pushT); pushT = setTimeout(push, 500); return; }
+    syncing = true; dirty = false;
+    try {
+      const j = await api('PUT', state);
+      state = fixState(merge(state, j.state)); persist(); rerender();
+      setSync('Synced', 'ok');
+    } catch (e) {
+      dirty = true;
+      if (e.code === 401) return lockOut('Passcode changed. Enter the new one.');
+      setSync('Offline · retrying', 'bad'); clearTimeout(pushT); pushT = setTimeout(push, 15000);
+    } finally { syncing = false; }
+  }
+  async function pull() {
+    if (!online || !pass || syncing) return;
+    try {
+      const j = await api('GET');
+      const server = j.state;
+      const merged = fixState(merge(server, state));
+      const changedForServer = needsPush(server, merged);
+      state = merged; persist(); rerender();
+      if (changedForServer || dirty) push(); else setSync('Synced', 'ok');
+    } catch (e) {
+      if (e.code === 401) return lockOut(pass ? 'Wrong passcode' : '');
+      setSync(e.code === 500 ? e.message : 'Offline', 'bad');
+    }
+  }
+  // true if `local` has anything newer than what the server holds
+  function needsPush(server, local) {
+    if (!server) return local.items.length > 0 || local.channelsAt > 0;
+    if ((local.channelsAt || 0) > (server.channelsAt || 0)) return true;
+    const sv = {}; (server.items || []).forEach(i => sv[i.id] = i.updatedAt || 0);
+    if (local.items.some(i => !(i.id in sv) || (i.updatedAt || 0) > sv[i.id])) return true;
+    const sd = server.deleted || {};
+    return Object.entries(local.deleted || {}).some(([id, t]) => !(sd[id] >= t));
+  }
+  function lockOut(msg) {
+    pass = ''; try { localStorage.removeItem(PASSK); } catch (e) {}
+    document.getElementById('lock').classList.add('open');
+    document.getElementById('lockErr').textContent = msg || '';
+    setSync('Locked', 'bad');
+  }
+  function rerender() {
+    renderAll();
+    if (document.getElementById('view-settings').classList.contains('active') && !document.activeElement?.closest('#settingsChannels')) renderSettings();
   }
 
   // ---------- date helpers (local dates as YYYY-MM-DD, no timezone drift) ----------
@@ -583,6 +688,7 @@
     if (!pl.length) { toast('Pick at least one platform'); return; }
     if (pl.every(p => draft.platforms[p].posted)) draft.stage = 'Posted';
     else if (draft.stage === 'Posted') draft.stage = 'Ready';
+    touch(draft);
     if (editingId) state.items = state.items.map(i => i.id === editingId ? draft : i);
     else state.items.push(draft);
     save(); closeEditor(); renderAll();
@@ -599,7 +705,7 @@
       state.channels.forEach(c => Object.entries(c.formats).forEach(([f, fc]) => {
         if (!fc.days.includes(d.getDay())) return;
         if (state.items.some(i => i.channel === c.id && i.format === f && i.date === s)) return;
-        state.items.push(newItem({ channel: c.id, format: f, date: s }));
+        state.items.push(touch(newItem({ channel: c.id, format: f, date: s })));
         added++;
       }));
     }
@@ -661,7 +767,7 @@
   $('#eCancel').onclick = closeEditor;
   $('#eDelete').onclick = () => {
     if (!confirm('Delete this post?')) return;
-    state.items = state.items.filter(i => i.id !== editingId); save(); closeEditor(); renderAll(); toast('Deleted');
+    tombstone(editingId); state.items = state.items.filter(i => i.id !== editingId); save(); closeEditor(); renderAll(); toast('Deleted');
   };
   $('#eDup').onclick = () => {
     const copy = structuredClone(draft);
@@ -679,7 +785,7 @@
   // settings events
   $('#settingsChannels').addEventListener('input', e => {
     const t = e.target; if (!t.dataset.c) return;
-    chan(t.dataset.c)[t.dataset.k] = t.value; save();
+    chan(t.dataset.c)[t.dataset.k] = t.value; state.channelsAt = Date.now(); save();
     renderChannelSelects(); renderStats(); renderBoard(); renderChannelCards(); renderMonth(); renderList();
   });
   $('#settingsChannels').addEventListener('click', e => {
@@ -698,7 +804,7 @@
       if (state.items.some(i => i.channel === c && i.format === f)) { toast('This channel still has full-length posts — delete them first'); return; }
       delete chan(c).formats[f];
     } else return;
-    save(); renderSettings(); renderAll();
+    state.channelsAt = Date.now(); save(); renderSettings(); renderAll();
   });
   $('#exportBtn').onclick = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -711,20 +817,49 @@
     try {
       const s = JSON.parse(await f.text());
       if (!Array.isArray(s.items) || !Array.isArray(s.channels)) throw new Error('bad file');
-      state = s; save(); renderAll(); renderSettings(); toast(`Imported ${s.items.length} posts`);
+      if (!confirm(`Import ${s.items.length} posts? They are merged into what's here; a post with the same id is replaced by the imported copy.`)) { e.target.value = ''; return; }
+      const now = Date.now();
+      s.items.forEach(i => { i.updatedAt = now; delete s.deleted?.[i.id]; });
+      s.channelsAt = now; s.deleted = {};
+      state.items.forEach(i => { delete state.deleted[i.id]; });
+      state = fixState(merge(state, fixState(s))); save(); renderAll(); renderSettings(); toast(`Imported ${s.items.length} posts`);
     } catch (err) { toast('That file is not a content calendar export'); }
     e.target.value = '';
   };
   $('#resetBtn').onclick = () => {
     if (!confirm('Delete ALL posts? Channels and posting days are kept. Export a backup first if unsure.')) return;
-    state.items = []; save(); renderAll(); toast('All posts deleted');
+    state.items.forEach(i => tombstone(i.id)); state.items = []; save(); renderAll(); toast('All posts deleted');
   };
 
   // re-render at midnight / when returning to the tab so "today" stays right
   let lastDay = todayStr();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); } });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    if (todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); }
+    pull();
+  });
+  setInterval(() => { if (!document.hidden) pull(); }, 60000);
+
+  // passcode screen
+  $('#lockForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const v = $('#lockIn').value.trim(); if (!v) return;
+    pass = v; $('#lockErr').textContent = 'Checking…';
+    try {
+      await api('GET');
+      try { localStorage.setItem(PASSK, pass); } catch (err) {}
+      $('#lock').classList.remove('open'); $('#lockIn').value = '';
+      pull();
+    } catch (err) {
+      pass = '';
+      $('#lockErr').textContent = err.code === 401 ? 'Wrong passcode' : (err.message || 'Could not reach the server');
+    }
+  });
 
   renderAll();
+  if (!online) setSync('Local only', '');
+  else if (!pass) lockOut('');
+  else { setSync('Syncing…'); pull(); }
 })();
 </script>
 </body>
