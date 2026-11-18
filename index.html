@@ -66,6 +66,7 @@
   .ccard table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .ccard td { padding: 4px 0; border-top: 1px solid var(--line); }
   .ccard td.r { text-align: right; color: var(--muted); }
+  .ccard .left { font-size: 11px; color: var(--warn); }
   .ccard .next { margin-top: 10px; font-size: 12px; color: var(--muted); }
   .ccard .next b { color: var(--text); font-weight: 500; }
   .bar { height: 6px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-top: 4px; }
@@ -218,7 +219,7 @@
       <span>Hover a cell → + to add</span>
     </div>
 
-    <h2>Channels · last 30 days</h2>
+    <h2>Channels · made vs posted</h2>
     <div class="channels" id="channelCards"></div>
   </section>
 
@@ -317,20 +318,21 @@
   const DEFAULT_CHANNELS = [
     {
       id: 'td', name: 'Tech Decoded', color: '#38bdf8', handles: 'IG @techdecoded49 · YouTube',
-      formats: { short: { platforms: ['ig', 'yt'], days: [] } },
+      formats: { short: { platforms: ['ig', 'yt'], days: [] } }, m1: true,
     },
     {
       id: 'sos', name: 'Secrets of Sanatan', color: '#fb923c', handles: 'IG @mewwwssss · YouTube',
-      formats: { short: { platforms: ['ig', 'yt'], days: [] }, long: { platforms: ['yt'], days: [] } },
+      formats: { short: { platforms: ['yt'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true,
     },
     {
-      id: 'ttr', name: 'The Thinking Room', color: '#a78bfa', handles: 'Instagram · YouTube',
-      formats: { short: { platforms: ['ig', 'yt'], days: [] }, long: { platforms: ['yt'], days: [] } },
+      id: 'ttr', name: 'The Thinking Room', color: '#a78bfa', handles: 'IG @thethinkingroom.in · YouTube · Facebook',
+      formats: { short: { platforms: ['ig', 'yt', 'fb'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true,
     },
   ];
 
   // ---------- state ----------
   let state = load();
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} // keep any one-time settings update
   let editingId = null;
   let draft = null;
   let monthCursor = firstOfMonth(new Date());
@@ -348,6 +350,25 @@
   function fixState(s) {
     if (!Array.isArray(s.channels) || !s.channels.length) s.channels = structuredClone(DEFAULT_CHANNELS);
     s.deleted = s.deleted || {};
+    const now = Date.now();
+    s.channels.forEach(c => {
+      if (c.m1) return;
+      if (c.id === 'ttr') {
+        // The Thinking Room cross-posts every reel to IG, YouTube and Facebook: make FB a default and plan all three on every reel
+        const sf = c.formats.short; if (sf && !sf.platforms.includes('fb')) sf.platforms.push('fb');
+        if (c.handles === 'Instagram · YouTube') c.handles = 'IG @thethinkingroom.in · YouTube · Facebook';
+        (s.items || []).forEach(i => {
+          if (i.channel !== 'ttr' || i.format !== 'short') return;
+          sf.platforms.forEach(p => { if (i.platforms[p] && !i.platforms[p].planned) { i.platforms[p].planned = true; i.updatedAt = now; } });
+        });
+      }
+      if (c.id === 'sos') {
+        // @mewwwssss posts its own meme reels, so a new Sanatan short defaults to YouTube only
+        const sf = c.formats.short;
+        if (sf) { sf.platforms = sf.platforms.filter(p => p !== 'ig'); if (!sf.platforms.length) sf.platforms = ['yt']; }
+      }
+      c.m1 = true; s.channelsAt = now;
+    });
     s.channelsAt = s.channelsAt || 0;
     s.items.forEach(i => { i.updatedAt = i.updatedAt || 1; });
     return s;
@@ -512,6 +533,14 @@
     $('#fcount').textContent = `${n} post${n === 1 ? '' : 's'}`;
   }
 
+  const OUTLET = {
+    ig: { short: 'Instagram · Reels', long: 'Instagram · Videos' },
+    yt: { short: 'YouTube · Shorts', long: 'YouTube · Full length' },
+    fb: { short: 'Facebook · Reels', long: 'Facebook · Videos' },
+  };
+  // a video counts as "made" once it's Ready, or once it's up anywhere
+  const isMade = it => it.stage === 'Ready' || it.stage === 'Posted' || Object.values(it.platforms).some(v => v.posted);
+
   // ---------- rendering ----------
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -577,21 +606,24 @@
 
   function renderChannelCards() {
     const t = todayStr();
-    const from = ymd(addDays(new Date(), -29));
     $('#channelCards').innerHTML = state.channels.map(c => {
       const mine = state.items.filter(i => i.channel === c.id);
-      const recent = mine.filter(i => i.date >= from && i.date <= t);
+      const made = mine.filter(isMade);
       const rows = [];
       Object.keys(c.formats).forEach(f => {
         Object.keys(PLATFORMS).forEach(p => {
-          const pl = recent.filter(i => i.format === f && i.platforms[p]?.planned);
+          // every video made for this format that should go to platform p, vs. how many are up there
+          const pl = made.filter(i => i.format === f && i.platforms[p]?.planned);
           if (!pl.length && !c.formats[f].platforms.includes(p)) return;
           const done = pl.filter(i => i.platforms[p].posted).length;
           const pct = pl.length ? Math.round(done / pl.length * 100) : 0;
-          rows.push(`<tr><td>${PLATFORMS[p].label} · ${f === 'long' ? 'Full length' : 'Shorts'}
-            <div class="bar"><i style="width:${pct}%"></i></div></td><td class="r">${done}/${pl.length} posted</td></tr>`);
+          const left = pl.length - done;
+          rows.push(`<tr><td>${OUTLET[p][f]}
+            <div class="bar"><i style="width:${pct}%"></i></div></td><td class="r">${done}/${pl.length} posted${left ? `<br><span class="left">${left} to go</span>` : ''}</td></tr>`);
         });
       });
+      const inProd = mine.filter(i => !isMade(i)).length;
+      if (inProd) rows.push(`<tr><td colspan="2" class="r" style="text-align:left">${inProd} more in production (idea → editing)</td></tr>`);
       const next = sortItems(mine.filter(i => i.date >= t && status(i) !== 'posted'))[0];
       return `<div class="ccard" style="--c:${c.color}">
         <h3>${esc(c.name)}</h3><div class="handles">${esc(c.handles || '')}</div>
