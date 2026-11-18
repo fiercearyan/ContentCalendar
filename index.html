@@ -158,6 +158,12 @@
   .cad { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
   .toast.show { opacity: 1; }
+  .filterbar { flex-basis: 100%; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .slider { position: relative; display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .slider button { position: relative; z-index: 1; background: none; border: 0; padding: 5px 14px; border-radius: 999px; color: var(--muted); font-size: 13px; transition: color .2s; white-space: nowrap; }
+  .slider button.on { color: #1a1405; font-weight: 600; }
+  .slider .knob { position: absolute; top: 3px; bottom: 3px; left: 0; border-radius: 999px; background: var(--accent); transition: transform .25s cubic-bezier(.3,.7,.2,1), width .25s cubic-bezier(.3,.7,.2,1); }
+  .fcount { font-size: 12px; color: var(--muted); }
   .sync { font-size: 12px; color: var(--muted); }
   .sync.ok { color: var(--ok); }
   .sync.bad { color: var(--bad); }
@@ -184,6 +190,17 @@
   <span class="sync" id="sync"></span>
   <button class="btn" id="planBtn" title="Create placeholder slots for the next 14 days from each channel's posting days">Plan next 2 weeks</button>
   <button class="btn primary" id="newBtn">+ New post</button>
+  <div class="filterbar" id="filterbar">
+    <div class="slider" data-key="pf" role="radiogroup" aria-label="Platform">
+      <span class="knob"></span>
+      <button data-v="ig">IG</button><button data-v="yts">YT Shorts</button><button data-v="ytf">YT Full</button><button data-v="fb">FB</button><button data-v="all">All</button>
+    </div>
+    <div class="slider" data-key="st" role="radiogroup" aria-label="Status">
+      <span class="knob"></span>
+      <button data-v="scheduled">Scheduled</button><button data-v="posted">Posted</button><button data-v="all">All</button>
+    </div>
+    <span class="fcount" id="fcount"></span>
+  </div>
 </header>
 
 <main>
@@ -223,18 +240,6 @@
     <div class="filters">
       <input type="text" id="fText" placeholder="Search title / notes" />
       <select id="fChannel"></select>
-      <select id="fStatus">
-        <option value="">Any status</option>
-        <option value="upcoming">Upcoming</option>
-        <option value="overdue">Overdue</option>
-        <option value="partial">Partly posted</option>
-        <option value="posted">Fully posted</option>
-      </select>
-      <select id="fFormat">
-        <option value="">Shorts + long</option>
-        <option value="short">Shorts / Reels</option>
-        <option value="long">Full length</option>
-      </select>
     </div>
     <table class="list">
       <thead><tr><th>Date</th><th>Channel</th><th>Title</th><th>Type</th><th>Stage</th><th>Platforms</th></tr></thead>
@@ -472,6 +477,41 @@
   }
   const sortItems = arr => arr.slice().sort((a, b) => (a.date + (a.time || '99')).localeCompare(b.date + (b.time || '99')));
 
+  // ---------- view filters (platform + status), remembered per device ----------
+  const FK = 'contentCalendar.filters';
+  const VF = (() => {
+    const d = { pf: 'all', st: 'scheduled' };
+    try { return { ...d, ...JSON.parse(localStorage.getItem(FK) || '{}') }; } catch (e) { return d; }
+  })();
+  const pfKey = () => ({ ig: 'ig', yts: 'yt', ytf: 'yt', fb: 'fb' }[VF.pf] || null);
+  function matchPF(it) {
+    switch (VF.pf) {
+      case 'ig': return it.platforms.ig?.planned;
+      case 'yts': return it.format === 'short' && it.platforms.yt?.planned;
+      case 'ytf': return it.format === 'long' && it.platforms.yt?.planned;
+      case 'fb': return it.platforms.fb?.planned;
+      default: return true;
+    }
+  }
+  // "Posted" means posted on the chosen platform; with All platforms, posted everywhere it was planned
+  const isPosted = it => pfKey() ? !!it.platforms[pfKey()].posted : status(it) === 'posted';
+  function visible(it) {
+    if (!matchPF(it)) return false;
+    if (VF.st === 'scheduled') return !isPosted(it);
+    if (VF.st === 'posted') return isPosted(it);
+    return true;
+  }
+  function placeKnobs() {
+    document.querySelectorAll('.slider').forEach(sl => {
+      const v = VF[sl.dataset.key];
+      sl.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-checked', b.dataset.v === v); });
+      const b = sl.querySelector('button.on'), k = sl.querySelector('.knob');
+      if (b && b.offsetWidth) { k.style.width = b.offsetWidth + 'px'; k.style.transform = `translateX(${b.offsetLeft}px)`; }
+    });
+    const n = state.items.filter(visible).length;
+    $('#fcount').textContent = `${n} post${n === 1 ? '' : 's'}`;
+  }
+
   // ---------- rendering ----------
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -479,7 +519,7 @@
   function chipHTML(it, opts = {}) {
     const c = chan(it.channel);
     const st = status(it);
-    const pfs = planned(it).map(p => `<span class="pf ${it.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join('');
+    const pfs = planned(it).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${it.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join('');
     const title = it.title || (opts.showChannel ? `${c.name} ${it.format === 'long' ? 'video' : 'short'}` : (it.format === 'long' ? 'Full video (TBD)' : 'Short (TBD)'));
     return `<button class="chip ${st === 'posted' ? 'done' : ''} ${st === 'overdue' ? 'overdue' : ''}" style="--c:${c.color}" data-id="${it.id}" title="${esc(title)}">
       <span class="t">${opts.showChannel ? `<span style="color:${c.color}">●</span> ` : ''}${esc(title)}</span>
@@ -521,7 +561,7 @@
       html += `<div class="cell head ${d === t ? 'today' : ''}">${DOW[dt.getDay()]}<b>${dt.getDate()}</b>${dt.getDate() === 1 || d === days[0] ? dt.toLocaleDateString(undefined, { month: 'short' }) : ''}</div>`;
     });
     const byKey = {};
-    state.items.forEach(i => { (byKey[i.channel + '|' + i.date] ||= []).push(i); });
+    state.items.filter(visible).forEach(i => { (byKey[i.channel + '|' + i.date] ||= []).push(i); });
     state.channels.forEach(c => {
       html += `<div class="cell lane" style="--c:${c.color}">${esc(c.name)}</div>`;
       days.forEach(d => {
@@ -568,7 +608,7 @@
     const start = addDays(m, -((m.getDay() + 6) % 7)); // weeks start Monday
     const t = todayStr();
     const byDate = {};
-    state.items.filter(i => !filter || i.channel === filter).forEach(i => (byDate[i.date] ||= []).push(i));
+    state.items.filter(i => visible(i) && (!filter || i.channel === filter)).forEach(i => (byDate[i.date] ||= []).push(i));
     let html = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dow">${d}</div>`).join('');
     const last = new Date(m.getFullYear(), m.getMonth() + 1, 0);
     const cells = Math.ceil((Math.round((last - start) / 864e5) + 1) / 7) * 7;
@@ -585,13 +625,13 @@
 
   function renderList() {
     const q = $('#fText').value.trim().toLowerCase();
-    const ch = $('#fChannel').value, st = $('#fStatus').value, fm = $('#fFormat').value;
-    const rows = sortItems(state.items).reverse().filter(i =>
-      (!ch || i.channel === ch) && (!fm || i.format === fm) && (!st || status(i) === st) &&
-      (!q || (i.title + ' ' + i.notes).toLowerCase().includes(q)));
+    const ch = $('#fChannel').value;
+    let rows = sortItems(state.items.filter(visible)).filter(i =>
+      (!ch || i.channel === ch) && (!q || (i.title + ' ' + i.notes).toLowerCase().includes(q)));
+    if (VF.st !== 'scheduled') rows = rows.reverse(); // scheduled: soonest first; otherwise newest first
     $('#listBody').innerHTML = rows.length ? rows.map(i => {
       const c = chan(i.channel), s = status(i);
-      const pfs = planned(i).map(p => `<span class="pf ${i.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join(' ');
+      const pfs = planned(i).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${i.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join(' ');
       const color = { posted: 'var(--ok)', overdue: 'var(--bad)', partial: 'var(--warn)', upcoming: 'var(--muted)' }[s];
       return `<tr data-id="${i.id}"><td>${fmtDate(i.date)}${i.time ? ' · ' + i.time : ''}</td>
         <td><span class="dot" style="--c:${c.color}"></span>${esc(c.name)}</td>
@@ -637,7 +677,7 @@
   function renderAll() {
     renderChannelSelects();
     renderStats(); renderBoard(); renderChannelCards();
-    renderMonth(); renderList();
+    renderMonth(); renderList(); placeKnobs();
     if ($('#view-settings').classList.contains('active')) renderSettings();
   }
 
@@ -724,12 +764,21 @@
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
     document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
     if (v === 'settings') renderSettings();
+    $('#filterbar').style.display = v === 'settings' ? 'none' : '';
+    placeKnobs();
   }
 
   // ---------- events ----------
   $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchView(b.dataset.view); });
   $('#newBtn').addEventListener('click', () => openEditor(newItem(), true));
   $('#planBtn').addEventListener('click', planTwoWeeks);
+  $('#filterbar').addEventListener('click', e => {
+    const b = e.target.closest('.slider button'); if (!b) return;
+    VF[b.closest('.slider').dataset.key] = b.dataset.v;
+    try { localStorage.setItem(FK, JSON.stringify(VF)); } catch (err) {}
+    renderBoard(); renderMonth(); renderList(); placeKnobs();
+  });
+  window.addEventListener('resize', placeKnobs);
 
   document.body.addEventListener('click', e => {
     const chip = e.target.closest('.chip');
@@ -744,7 +793,7 @@
   $('#nextM').onclick = () => { monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1); renderMonth(); };
   $('#todayM').onclick = () => { monthCursor = firstOfMonth(new Date()); renderMonth(); };
   $('#monthFilter').onchange = renderMonth;
-  ['#fText', '#fChannel', '#fStatus', '#fFormat'].forEach(s => $(s).addEventListener('input', renderList));
+  ['#fText', '#fChannel'].forEach(s => $(s).addEventListener('input', renderList));
 
   // editor events
   $('#eChannel').onchange = () => { draft.channel = $('#eChannel').value; fillFormats(); applyDefaultPlatforms(); renderEditorBits(); };
