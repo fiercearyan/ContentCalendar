@@ -820,7 +820,8 @@
       if (!confirm(`Import ${s.items.length} posts? They are merged into what's here; a post with the same id is replaced by the imported copy.`)) { e.target.value = ''; return; }
       const now = Date.now();
       s.items.forEach(i => { i.updatedAt = now; delete s.deleted?.[i.id]; });
-      s.channelsAt = now; s.deleted = {};
+      if (s.channels.length) s.channelsAt = now; else { s.channels = state.channels; s.channelsAt = 0; } // posts-only file keeps your channel settings
+      s.deleted = {};
       state.items.forEach(i => { delete state.deleted[i.id]; });
       state = fixState(merge(state, fixState(s))); save(); renderAll(); renderSettings(); toast(`Imported ${s.items.length} posts`);
     } catch (err) { toast('That file is not a content calendar export'); }
