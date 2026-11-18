@@ -341,6 +341,7 @@
     return fixState({ version: 1, channels: structuredClone(DEFAULT_CHANNELS), channelsAt: 0, items: [] });
   }
   function fixState(s) {
+    if (!Array.isArray(s.channels) || !s.channels.length) s.channels = structuredClone(DEFAULT_CHANNELS);
     s.deleted = s.deleted || {};
     s.channelsAt = s.channelsAt || 0;
     s.items.forEach(i => { i.updatedAt = i.updatedAt || 1; });
