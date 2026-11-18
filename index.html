@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Content Calendar</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --text: #e7e9ee;
+    --muted: #8b93a3;
+    --accent: #f5b942;
+    --ok: #34d399;
+    --warn: #f59e0b;
+    --bad: #f87171;
+    --radius: 10px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--accent); }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 20px; background: rgba(15,17,21,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
+  header h1 span { color: var(--accent); }
+  nav { display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
+  nav button { background: none; border: 0; padding: 6px 12px; border-radius: 6px; color: var(--muted); }
+  nav button.active { background: var(--panel-2); color: var(--text); }
+  .spacer { flex: 1; }
+  .btn { background: var(--panel-2); border: 1px solid var(--line); padding: 7px 12px; border-radius: 8px; }
+  .btn:hover { border-color: #3a4150; }
+  .btn.primary { background: var(--accent); color: #1a1405; border-color: var(--accent); font-weight: 600; }
+  .btn.danger { color: var(--bad); }
+  .btn.small { padding: 4px 9px; font-size: 12px; }
+
+  main { padding: 20px; max-width: 1500px; margin: 0 auto; }
+  .view { display: none; }
+  .view.active { display: block; }
+  h2 { font-size: 15px; margin: 26px 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  h2:first-child { margin-top: 0; }
+
+  /* stats */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .stat .n { font-size: 26px; font-weight: 700; }
+  .stat .l { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .stat.bad .n { color: var(--bad); }
+  .stat.ok .n { color: var(--ok); }
+
+  /* channel cards */
+  .channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .ccard { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; border-top: 3px solid var(--c); }
+  .ccard h3 { margin: 0 0 2px; font-size: 15px; }
+  .ccard .handles { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .ccard table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ccard td { padding: 4px 0; border-top: 1px solid var(--line); }
+  .ccard td.r { text-align: right; color: var(--muted); }
+  .ccard .next { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .ccard .next b { color: var(--text); font-weight: 500; }
+  .bar { height: 6px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .bar i { display: block; height: 100%; background: var(--c); }
+
+  /* board */
+  .board-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+  .board { display: grid; min-width: 1200px; }
+  .board .cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 6px; min-height: 74px; }
+  .board .head { min-height: 0; text-align: center; font-size: 12px; color: var(--muted); padding: 8px 4px; background: var(--panel-2); }
+  .board .head b { display: block; color: var(--text); font-size: 15px; }
+  .board .head.today { background: #3a2f12; color: var(--accent); }
+  .board .head.today b { color: var(--accent); }
+  .board .lane { position: sticky; left: 0; z-index: 2; background: var(--panel-2); font-weight: 600; font-size: 13px; display: flex; align-items: center; border-left: 3px solid var(--c); }
+  .board .cell.past { background: rgba(255,255,255,.012); }
+  .board .cell.todaycol { background: rgba(245,185,66,.06); }
+  .board .cell.add:hover { background: rgba(255,255,255,.03); }
+  .board .plus { opacity: 0; color: var(--muted); font-size: 12px; border: 0; background: none; width: 100%; padding: 2px; }
+  .board .cell:hover .plus { opacity: 1; }
+
+  /* chips */
+  .chip {
+    display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-left: 3px solid var(--c);
+    background: var(--panel-2); border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; font-size: 12px; line-height: 1.3;
+  }
+  .chip:hover { border-color: #444b5a; border-left-color: var(--c); }
+  .chip .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip .m { display: flex; gap: 4px; margin-top: 3px; align-items: center; flex-wrap: wrap; }
+  .chip.done { opacity: .62; }
+  .chip.done .t { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.35); }
+  .chip.overdue { border-color: rgba(248,113,113,.55); border-left-color: var(--bad); }
+  .pf { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: #2b303b; color: var(--muted); }
+  .pf.on { background: rgba(52,211,153,.18); color: var(--ok); }
+  .fmt { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .stage { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #262b35; color: #b9c0cd; }
+
+  /* month */
+  .month-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .month-head h3 { margin: 0; font-size: 18px; min-width: 180px; }
+  .month { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
+  .month .dow { padding: 8px; font-size: 12px; color: var(--muted); background: var(--panel-2); border-bottom: 1px solid var(--line); text-align: center; }
+  .month .day { min-height: 118px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 6px; }
+  .month .day:nth-child(7n) { border-right: 0; }
+  .month .day.other { background: rgba(0,0,0,.18); }
+  .month .day.other .num { color: #4a5160; }
+  .month .num { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .month .day.today .num b { background: var(--accent); color: #1a1405; border-radius: 10px; padding: 0 6px; }
+  .month .num button { opacity: 0; border: 0; background: none; color: var(--muted); padding: 0 4px; }
+  .month .day:hover .num button { opacity: 1; }
+
+  /* list */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filters select, .filters input { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+  table.list { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  table.list th, table.list td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 13px; vertical-align: middle; }
+  table.list th { color: var(--muted); font-weight: 600; background: var(--panel-2); font-size: 12px; }
+  table.list tr:hover td { background: rgba(255,255,255,.02); cursor: pointer; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 6px; }
+  .empty { color: var(--muted); text-align: center; padding: 30px; }
+
+  /* modal */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: flex-start; justify-content: center; z-index: 50; padding: 40px 16px; overflow-y: auto; }
+  .backdrop.open { display: flex; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: 100%; max-width: 560px; padding: 20px; }
+  .modal h3 { margin: 0 0 14px; font-size: 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .field input[type=text], .field input[type=date], .field input[type=time], .field input[type=url], .field select, .field textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .pgrid { display: grid; gap: 6px; }
+  .prow { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .prow.off { opacity: .5; }
+  .prow label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); margin: 0; }
+  .modal .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .seg button { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font-size: 12px; color: var(--muted); }
+  .seg button.on { border-color: var(--accent); color: var(--accent); }
+
+  /* settings */
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 10px; font-size: 15px; }
+  .card p { color: var(--muted); margin: 0 0 10px; }
+  .days { display: flex; gap: 4px; }
+  .days button { width: 34px; padding: 5px 0; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); font-size: 12px; }
+  .days button.on { background: var(--c); color: #0b0d10; border-color: var(--c); font-weight: 700; }
+  .cad { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
+  .toast.show { opacity: 1; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+
+  @media (max-width: 700px) {
+    main { padding: 12px; }
+    .month .day { min-height: 80px; }
+    .month .chip .m { display: none; }
+    .row, .row3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Content <span>Calendar</span></h1>
+  <nav id="tabs">
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="calendar">Month</button>
+    <button data-view="list">All posts</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+  <div class="spacer"></div>
+  <button class="btn" id="planBtn" title="Create placeholder slots for the next 14 days from each channel's posting days">Plan next 2 weeks</button>
+  <button class="btn primary" id="newBtn">+ New post</button>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dashboard">
+    <h2>Overview</h2>
+    <div class="stats" id="stats"></div>
+
+    <h2>Last week → next two weeks</h2>
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <div class="legend">
+      <span><span class="pf on">IG</span> posted</span>
+      <span><span class="pf">IG</span> planned, not posted yet</span>
+      <span>Red border = date passed, not fully posted</span>
+      <span>Hover a cell → + to add</span>
+    </div>
+
+    <h2>Channels · last 30 days</h2>
+    <div class="channels" id="channelCards"></div>
+  </section>
+
+  <!-- MONTH -->
+  <section class="view" id="view-calendar">
+    <div class="month-head">
+      <button class="btn" id="prevM">‹</button>
+      <h3 id="monthTitle"></h3>
+      <button class="btn" id="nextM">›</button>
+      <button class="btn small" id="todayM">Today</button>
+      <div class="spacer"></div>
+      <select id="monthFilter" class="btn"></select>
+    </div>
+    <div class="month" id="month"></div>
+  </section>
+
+  <!-- LIST -->
+  <section class="view" id="view-list">
+    <div class="filters">
+      <input type="text" id="fText" placeholder="Search title / notes" />
+      <select id="fChannel"></select>
+      <select id="fStatus">
+        <option value="">Any status</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="overdue">Overdue</option>
+        <option value="partial">Partly posted</option>
+        <option value="posted">Fully posted</option>
+      </select>
+      <select id="fFormat">
+        <option value="">Shorts + long</option>
+        <option value="short">Shorts / Reels</option>
+        <option value="long">Full length</option>
+      </select>
+    </div>
+    <table class="list">
+      <thead><tr><th>Date</th><th>Channel</th><th>Title</th><th>Type</th><th>Stage</th><th>Platforms</th></tr></thead>
+      <tbody id="listBody"></tbody>
+    </table>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="view-settings">
+    <div id="settingsChannels"></div>
+    <div class="card">
+      <h3>Backup &amp; sync</h3>
+      <p>Your data is saved in this browser. Export a backup now and then, or to move your calendar to another device (export here, import there).</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <label class="btn">Import JSON<input type="file" id="importFile" accept="application/json" hidden /></label>
+        <button class="btn danger" id="resetBtn">Delete all posts</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- EDITOR -->
+<div class="backdrop" id="backdrop">
+  <div class="modal">
+    <h3 id="mTitle">New post</h3>
+    <div class="field"><label>Title / topic</label><input type="text" id="eTitle" placeholder="e.g. AI Shovel #12, Ramayan part 3…" /></div>
+    <div class="row">
+      <div class="field"><label>Channel</label><select id="eChannel"></select></div>
+      <div class="field"><label>Type</label><select id="eFormat"></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Publish date</label><input type="date" id="eDate" /></div>
+      <div class="field"><label>Time (optional)</label><input type="time" id="eTime" /></div>
+    </div>
+    <div class="field"><label>Stage</label><div class="seg" id="eStage"></div></div>
+    <div class="field"><label>Platforms (planned → posted)</label><div class="pgrid" id="ePlatforms"></div></div>
+    <div class="field"><label>Link (optional)</label><input type="url" id="eLink" placeholder="https://…" /></div>
+    <div class="field"><label>Notes</label><textarea id="eNotes" placeholder="Hook, script link, music, thumbnail idea…"></textarea></div>
+    <div class="actions">
+      <button class="btn danger" id="eDelete">Delete</button>
+      <button class="btn" id="eDup">Duplicate</button>
+      <div class="spacer"></div>
+      <button class="btn" id="eCancel">Cancel</button>
+      <button class="btn primary" id="eSave">Save</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- constants ----------
+  const KEY = 'contentCalendar.v1';
+  const PLATFORMS = {
+    ig: { label: 'Instagram', short: 'IG' },
+    yt: { label: 'YouTube', short: 'YT' },
+    fb: { label: 'Facebook', short: 'FB' },
+  };
+  const FORMATS = { short: 'Short / Reel', long: 'Full length' };
+  const STAGES = ['Idea', 'Script', 'Voice/Record', 'Editing', 'Ready', 'Posted'];
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const DEFAULT_CHANNELS = [
+    {
+      id: 'td', name: 'Tech Decoded', color: '#38bdf8', handles: 'IG @techdecoded49 · YouTube',
+      formats: { short: { platforms: ['ig', 'yt'], days: [] } },
+    },
+    {
+      id: 'sos', name: 'Secrets of Sanatan', color: '#fb923c', handles: 'IG @mewwwssss · YouTube',
+      formats: { short: { platforms: ['ig', 'yt'], days: [] }, long: { platforms: ['yt'], days: [] } },
+    },
+    {
+      id: 'ttr', name: 'The Thinking Room', color: '#a78bfa', handles: 'Instagram · YouTube',
+      formats: { short: { platforms: ['ig', 'yt'], days: [] }, long: { platforms: ['yt'], days: [] } },
+    },
+  ];
+
+  // ---------- state ----------
+  let state = load();
+  let editingId = null;
+  let draft = null;
+  let monthCursor = firstOfMonth(new Date());
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && Array.isArray(s.items) && Array.isArray(s.channels)) return s;
+      }
+    } catch (e) { /* storage unavailable or corrupt */ }
+    return { version: 1, channels: structuredClone(DEFAULT_CHANNELS), items: [] };
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { toast('Could not save in this browser — export a backup'); }
+  }
+
+  // ---------- date helpers (local dates as YYYY-MM-DD, no timezone drift) ----------
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  function firstOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  const todayStr = () => ymd(new Date());
+  const fmtDate = s => parse(s).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // ---------- item helpers ----------
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  const chan = id => state.channels.find(c => c.id === id) || state.channels[0];
+  const planned = it => Object.keys(it.platforms).filter(p => it.platforms[p].planned);
+  const postedCount = it => planned(it).filter(p => it.platforms[p].posted).length;
+  function status(it) {
+    const pl = planned(it), done = postedCount(it);
+    if (pl.length && done === pl.length) return 'posted';
+    if (it.date < todayStr()) return 'overdue';
+    if (done > 0) return 'partial';
+    return 'upcoming';
+  }
+  function newItem(over = {}) {
+    const c = chan(over.channel || state.channels[0].id);
+    const format = over.format || Object.keys(c.formats)[0];
+    const defaults = (c.formats[format] || { platforms: [] }).platforms;
+    const platforms = {};
+    Object.keys(PLATFORMS).forEach(p => platforms[p] = { planned: defaults.includes(p), posted: false });
+    return {
+      id: uid(), title: '', channel: c.id, format, date: todayStr(), time: '',
+      stage: 'Idea', platforms, link: '', notes: '', ...over, platforms: over.platforms || platforms,
+    };
+  }
+  const sortItems = arr => arr.slice().sort((a, b) => (a.date + (a.time || '99')).localeCompare(b.date + (b.time || '99')));
+
+  // ---------- rendering ----------
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+  function chipHTML(it, opts = {}) {
+    const c = chan(it.channel);
+    const st = status(it);
+    const pfs = planned(it).map(p => `<span class="pf ${it.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join('');
+    const title = it.title || (opts.showChannel ? `${c.name} ${it.format === 'long' ? 'video' : 'short'}` : (it.format === 'long' ? 'Full video (TBD)' : 'Short (TBD)'));
+    return `<button class="chip ${st === 'posted' ? 'done' : ''} ${st === 'overdue' ? 'overdue' : ''}" style="--c:${c.color}" data-id="${it.id}" title="${esc(title)}">
+      <span class="t">${opts.showChannel ? `<span style="color:${c.color}">●</span> ` : ''}${esc(title)}</span>
+      <span class="m"><span class="fmt">${it.format === 'long' ? 'Long' : 'Short'}</span>${pfs}${st !== 'posted' ? `<span class="stage">${esc(it.stage)}</span>` : ''}</span>
+    </button>`;
+  }
+
+  function renderStats() {
+    const t = todayStr();
+    const in14 = ymd(addDays(new Date(), 13));
+    const monthStart = ymd(firstOfMonth(new Date()));
+    const weekAgo = ymd(addDays(new Date(), -6));
+    const items = state.items;
+    const postedMonth = items.filter(i => status(i) === 'posted' && i.date >= monthStart && i.date <= t).length;
+    const uploadsMonth = items.filter(i => i.date >= monthStart && i.date <= t).reduce((n, i) => n + postedCount(i), 0);
+    const upcoming = items.filter(i => i.date >= t && i.date <= in14 && status(i) !== 'posted');
+    const overdue = items.filter(i => status(i) === 'overdue').length;
+    const ready = upcoming.filter(i => i.stage === 'Ready').length;
+    const lastWeek = items.filter(i => i.date >= weekAgo && i.date <= t);
+    const lwDone = lastWeek.filter(i => status(i) === 'posted').length;
+    $('#stats').innerHTML = [
+      ['', postedMonth, `Posts fully out this month (${uploadsMonth} platform uploads)`],
+      ['', upcoming.length, 'Planned in next 14 days'],
+      ['ok', `${ready}/${upcoming.length}`, 'Of those, ready to post'],
+      [overdue ? 'bad' : 'ok', overdue, 'Overdue (past date, not posted)'],
+      ['', lastWeek.length ? `${Math.round(lwDone / lastWeek.length * 100)}%` : '–', `Last 7 days on schedule (${lwDone}/${lastWeek.length})`],
+    ].map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  }
+
+  function renderBoard() {
+    const start = addDays(new Date(), -7);
+    const days = Array.from({ length: 22 }, (_, i) => ymd(addDays(start, i)));
+    const t = todayStr();
+    const b = $('#board');
+    b.style.gridTemplateColumns = `150px repeat(${days.length}, minmax(96px, 1fr))`;
+    let html = `<div class="cell head lane" style="--c:transparent">Channel</div>`;
+    days.forEach(d => {
+      const dt = parse(d);
+      html += `<div class="cell head ${d === t ? 'today' : ''}">${DOW[dt.getDay()]}<b>${dt.getDate()}</b>${dt.getDate() === 1 || d === days[0] ? dt.toLocaleDateString(undefined, { month: 'short' }) : ''}</div>`;
+    });
+    const byKey = {};
+    state.items.forEach(i => { (byKey[i.channel + '|' + i.date] ||= []).push(i); });
+    state.channels.forEach(c => {
+      html += `<div class="cell lane" style="--c:${c.color}">${esc(c.name)}</div>`;
+      days.forEach(d => {
+        const list = sortItems(byKey[c.id + '|' + d] || []);
+        html += `<div class="cell add ${d < t ? 'past' : ''} ${d === t ? 'todaycol' : ''}">${list.map(i => chipHTML(i)).join('')}<button class="plus" data-add="${c.id}|${d}">+</button></div>`;
+      });
+    });
+    b.innerHTML = html;
+    // scroll so that today is near the left edge on first render
+    const wrap = b.parentElement;
+    if (!wrap.dataset.scrolled) { wrap.scrollLeft = 96 * 5; wrap.dataset.scrolled = '1'; }
+  }
+
+  function renderChannelCards() {
+    const t = todayStr();
+    const from = ymd(addDays(new Date(), -29));
+    $('#channelCards').innerHTML = state.channels.map(c => {
+      const mine = state.items.filter(i => i.channel === c.id);
+      const recent = mine.filter(i => i.date >= from && i.date <= t);
+      const rows = [];
+      Object.keys(c.formats).forEach(f => {
+        Object.keys(PLATFORMS).forEach(p => {
+          const pl = recent.filter(i => i.format === f && i.platforms[p]?.planned);
+          if (!pl.length && !c.formats[f].platforms.includes(p)) return;
+          const done = pl.filter(i => i.platforms[p].posted).length;
+          const pct = pl.length ? Math.round(done / pl.length * 100) : 0;
+          rows.push(`<tr><td>${PLATFORMS[p].label} · ${f === 'long' ? 'Full length' : 'Shorts'}
+            <div class="bar"><i style="width:${pct}%"></i></div></td><td class="r">${done}/${pl.length} posted</td></tr>`);
+        });
+      });
+      const next = sortItems(mine.filter(i => i.date >= t && status(i) !== 'posted'))[0];
+      return `<div class="ccard" style="--c:${c.color}">
+        <h3>${esc(c.name)}</h3><div class="handles">${esc(c.handles || '')}</div>
+        <table>${rows.join('')}</table>
+        <div class="next">Next up: ${next ? `<b>${esc(next.title || (next.format === 'long' ? 'Full video' : 'Short'))}</b> · ${fmtDate(next.date)} · ${esc(next.stage)}` : '<b>nothing planned</b>'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderMonth() {
+    const m = monthCursor;
+    $('#monthTitle').textContent = m.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const filter = $('#monthFilter').value;
+    const start = addDays(m, -((m.getDay() + 6) % 7)); // weeks start Monday
+    const t = todayStr();
+    const byDate = {};
+    state.items.filter(i => !filter || i.channel === filter).forEach(i => (byDate[i.date] ||= []).push(i));
+    let html = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dow">${d}</div>`).join('');
+    const last = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+    const cells = Math.ceil((Math.round((last - start) / 864e5) + 1) / 7) * 7;
+    for (let i = 0; i < cells; i++) {
+      const d = addDays(start, i);
+      const s = ymd(d);
+      html += `<div class="day ${d.getMonth() !== m.getMonth() ? 'other' : ''} ${s === t ? 'today' : ''}">
+        <div class="num"><b>${d.getDate()}</b><button data-add="|${s}" title="Add post">+</button></div>
+        ${sortItems(byDate[s] || []).map(it => chipHTML(it, { showChannel: true })).join('')}
+      </div>`;
+    }
+    $('#month').innerHTML = html;
+  }
+
+  function renderList() {
+    const q = $('#fText').value.trim().toLowerCase();
+    const ch = $('#fChannel').value, st = $('#fStatus').value, fm = $('#fFormat').value;
+    const rows = sortItems(state.items).reverse().filter(i =>
+      (!ch || i.channel === ch) && (!fm || i.format === fm) && (!st || status(i) === st) &&
+      (!q || (i.title + ' ' + i.notes).toLowerCase().includes(q)));
+    $('#listBody').innerHTML = rows.length ? rows.map(i => {
+      const c = chan(i.channel), s = status(i);
+      const pfs = planned(i).map(p => `<span class="pf ${i.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join(' ');
+      const color = { posted: 'var(--ok)', overdue: 'var(--bad)', partial: 'var(--warn)', upcoming: 'var(--muted)' }[s];
+      return `<tr data-id="${i.id}"><td>${fmtDate(i.date)}${i.time ? ' · ' + i.time : ''}</td>
+        <td><span class="dot" style="--c:${c.color}"></span>${esc(c.name)}</td>
+        <td>${esc(i.title || '—')}</td><td>${FORMATS[i.format]}</td>
+        <td><span style="color:${color}">${s === 'posted' ? 'Posted' : s === 'overdue' ? 'Overdue · ' + esc(i.stage) : esc(i.stage)}</span></td>
+        <td>${pfs}</td></tr>`;
+    }).join('') : `<tr><td colspan="6" class="empty">No posts match. Add one with “+ New post”.</td></tr>`;
+  }
+
+  function renderChannelSelects() {
+    const opts = state.channels.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    const keep = (sel, all) => { const v = sel.value; sel.innerHTML = `<option value="">${all}</option>` + opts; sel.value = v; };
+    keep($('#fChannel'), 'All channels');
+    keep($('#monthFilter'), 'All channels');
+    $('#eChannel').innerHTML = opts;
+  }
+
+  function renderSettings() {
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    $('#settingsChannels').innerHTML = state.channels.map(c => `
+      <div class="card" style="--c:${c.color}">
+        <div class="row3">
+          <div class="field"><label>Channel name</label><input type="text" data-c="${c.id}" data-k="name" value="${esc(c.name)}" /></div>
+          <div class="field"><label>Handles / note</label><input type="text" data-c="${c.id}" data-k="handles" value="${esc(c.handles || '')}" /></div>
+          <div class="field"><label>Colour</label><input type="color" data-c="${c.id}" data-k="color" value="${c.color}" style="width:100%;height:36px;background:none;border:1px solid var(--line);border-radius:8px" /></div>
+        </div>
+        ${Object.keys(FORMATS).map(f => {
+          const fc = c.formats[f];
+          if (!fc) return `<div class="cad"><span style="color:var(--muted)">${FORMATS[f]}</span><span><button class="btn small" data-addfmt="${c.id}|${f}">Enable ${FORMATS[f].toLowerCase()}</button></span></div>`;
+          return `<div class="cad"><b>${FORMATS[f]}</b>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+              <span style="color:var(--muted);font-size:12px">Posting days</span>
+              <div class="days">${order.map(d => `<button class="${fc.days.includes(d) ? 'on' : ''}" data-day="${c.id}|${f}|${d}">${DOW[d][0]}${DOW[d][1]}</button>`).join('')}</div>
+              <span style="color:var(--muted);font-size:12px">Default platforms</span>
+              <div class="seg">${Object.keys(PLATFORMS).map(p => `<button class="${fc.platforms.includes(p) ? 'on' : ''}" data-defp="${c.id}|${f}|${p}">${PLATFORMS[p].short}</button>`).join('')}</div>
+              ${f === 'long' ? `<button class="btn small danger" data-rmfmt="${c.id}|${f}">Disable</button>` : ''}
+            </div></div>`;
+        }).join('')}
+      </div>`).join('') +
+      `<div class="card"><p style="margin:0">Posting days drive <b>Plan next 2 weeks</b>: it adds an empty “Idea” slot on each posting day that doesn't already have a post of that type for the channel. Facebook is off by default — switch on “FB” above for any format you cross-post.</p></div>`;
+  }
+
+  function renderAll() {
+    renderChannelSelects();
+    renderStats(); renderBoard(); renderChannelCards();
+    renderMonth(); renderList();
+    if ($('#view-settings').classList.contains('active')) renderSettings();
+  }
+
+  // ---------- editor ----------
+  function openEditor(item, isNew) {
+    editingId = isNew ? null : item.id;
+    draft = structuredClone(item);
+    $('#mTitle').textContent = isNew ? 'New post' : 'Edit post';
+    $('#eDelete').style.display = isNew ? 'none' : '';
+    $('#eDup').style.display = isNew ? 'none' : '';
+    $('#eTitle').value = draft.title;
+    $('#eChannel').value = draft.channel;
+    $('#eDate').value = draft.date;
+    $('#eTime').value = draft.time || '';
+    $('#eLink').value = draft.link || '';
+    $('#eNotes').value = draft.notes || '';
+    fillFormats();
+    renderEditorBits();
+    $('#backdrop').classList.add('open');
+    setTimeout(() => $('#eTitle').focus(), 30);
+  }
+  function fillFormats() {
+    const c = chan(draft.channel);
+    $('#eFormat').innerHTML = Object.keys(c.formats).map(f => `<option value="${f}">${FORMATS[f]}</option>`).join('');
+    if (!c.formats[draft.format]) draft.format = Object.keys(c.formats)[0];
+    $('#eFormat').value = draft.format;
+  }
+  function applyDefaultPlatforms() {
+    const defs = chan(draft.channel).formats[draft.format].platforms;
+    Object.keys(PLATFORMS).forEach(p => draft.platforms[p] = { planned: defs.includes(p), posted: false });
+  }
+  function renderEditorBits() {
+    $('#eStage').innerHTML = STAGES.map(s => `<button class="${draft.stage === s ? 'on' : ''}" data-stage="${s}">${s}</button>`).join('');
+    $('#ePlatforms').innerHTML = Object.keys(PLATFORMS).map(p => {
+      const v = draft.platforms[p];
+      return `<div class="prow ${v.planned ? '' : 'off'}"><span>${PLATFORMS[p].label}</span>
+        <label><input type="checkbox" data-pp="${p}" ${v.planned ? 'checked' : ''}/> Planned</label>
+        <label><input type="checkbox" data-pd="${p}" ${v.posted ? 'checked' : ''} ${v.planned ? '' : 'disabled'}/> Posted</label></div>`;
+    }).join('');
+  }
+  function closeEditor() { $('#backdrop').classList.remove('open'); editingId = null; draft = null; }
+  function saveEditor() {
+    draft.title = $('#eTitle').value.trim();
+    draft.date = $('#eDate').value || todayStr();
+    draft.time = $('#eTime').value;
+    draft.link = $('#eLink').value.trim();
+    draft.notes = $('#eNotes').value;
+    const pl = planned(draft);
+    if (!pl.length) { toast('Pick at least one platform'); return; }
+    if (pl.every(p => draft.platforms[p].posted)) draft.stage = 'Posted';
+    else if (draft.stage === 'Posted') draft.stage = 'Ready';
+    if (editingId) state.items = state.items.map(i => i.id === editingId ? draft : i);
+    else state.items.push(draft);
+    save(); closeEditor(); renderAll();
+    toast('Saved');
+  }
+
+  // ---------- planning ----------
+  function planTwoWeeks() {
+    const hasDays = state.channels.some(c => Object.values(c.formats).some(f => f.days.length));
+    if (!hasDays) { toast('Set posting days per channel in Settings first'); switchView('settings'); return; }
+    let added = 0;
+    for (let n = 0; n < 14; n++) {
+      const d = addDays(new Date(), n), s = ymd(d);
+      state.channels.forEach(c => Object.entries(c.formats).forEach(([f, fc]) => {
+        if (!fc.days.includes(d.getDay())) return;
+        if (state.items.some(i => i.channel === c.id && i.format === f && i.date === s)) return;
+        state.items.push(newItem({ channel: c.id, format: f, date: s }));
+        added++;
+      }));
+    }
+    save(); renderAll();
+    toast(added ? `Added ${added} empty slot${added > 1 ? 's' : ''} for the next 2 weeks` : 'Next 2 weeks already planned');
+  }
+
+  // ---------- misc ----------
+  let toastT;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  function switchView(v) {
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+    document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
+    if (v === 'settings') renderSettings();
+  }
+
+  // ---------- events ----------
+  $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchView(b.dataset.view); });
+  $('#newBtn').addEventListener('click', () => openEditor(newItem(), true));
+  $('#planBtn').addEventListener('click', planTwoWeeks);
+
+  document.body.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) { const it = state.items.find(i => i.id === chip.dataset.id); if (it) openEditor(it, false); return; }
+    const add = e.target.closest('[data-add]');
+    if (add) { const [c, d] = add.dataset.add.split('|'); openEditor(newItem({ ...(c ? { channel: c } : {}), date: d }), true); return; }
+    const row = e.target.closest('#listBody tr[data-id]');
+    if (row) { const it = state.items.find(i => i.id === row.dataset.id); if (it) openEditor(it, false); }
+  });
+
+  $('#prevM').onclick = () => { monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1); renderMonth(); };
+  $('#nextM').onclick = () => { monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1); renderMonth(); };
+  $('#todayM').onclick = () => { monthCursor = firstOfMonth(new Date()); renderMonth(); };
+  $('#monthFilter').onchange = renderMonth;
+  ['#fText', '#fChannel', '#fStatus', '#fFormat'].forEach(s => $(s).addEventListener('input', renderList));
+
+  // editor events
+  $('#eChannel').onchange = () => { draft.channel = $('#eChannel').value; fillFormats(); applyDefaultPlatforms(); renderEditorBits(); };
+  $('#eFormat').onchange = () => { draft.format = $('#eFormat').value; applyDefaultPlatforms(); renderEditorBits(); };
+  $('#eStage').onclick = e => {
+    const b = e.target.closest('[data-stage]'); if (!b) return;
+    draft.stage = b.dataset.stage;
+    if (draft.stage === 'Posted') planned(draft).forEach(p => draft.platforms[p].posted = true);
+    renderEditorBits();
+  };
+  $('#ePlatforms').onchange = e => {
+    const t = e.target;
+    if (t.dataset.pp) { draft.platforms[t.dataset.pp].planned = t.checked; if (!t.checked) draft.platforms[t.dataset.pp].posted = false; }
+    if (t.dataset.pd) draft.platforms[t.dataset.pd].posted = t.checked;
+    const pl = planned(draft);
+    if (pl.length && pl.every(p => draft.platforms[p].posted)) draft.stage = 'Posted';
+    else if (draft.stage === 'Posted') draft.stage = 'Ready';
+    renderEditorBits();
+  };
+  $('#eSave').onclick = saveEditor;
+  $('#eCancel').onclick = closeEditor;
+  $('#eDelete').onclick = () => {
+    if (!confirm('Delete this post?')) return;
+    state.items = state.items.filter(i => i.id !== editingId); save(); closeEditor(); renderAll(); toast('Deleted');
+  };
+  $('#eDup').onclick = () => {
+    const copy = structuredClone(draft);
+    copy.id = uid(); copy.date = ymd(addDays(parse(copy.date), 1)); copy.stage = 'Idea';
+    Object.values(copy.platforms).forEach(v => v.posted = false);
+    closeEditor(); openEditor(copy, true);
+  };
+  $('#backdrop').addEventListener('mousedown', e => { if (e.target.id === 'backdrop') closeEditor(); });
+  document.addEventListener('keydown', e => {
+    if (!draft) return;
+    if (e.key === 'Escape') closeEditor();
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveEditor();
+  });
+
+  // settings events
+  $('#settingsChannels').addEventListener('input', e => {
+    const t = e.target; if (!t.dataset.c) return;
+    chan(t.dataset.c)[t.dataset.k] = t.value; save();
+    renderChannelSelects(); renderStats(); renderBoard(); renderChannelCards(); renderMonth(); renderList();
+  });
+  $('#settingsChannels').addEventListener('click', e => {
+    const day = e.target.closest('[data-day]'), defp = e.target.closest('[data-defp]');
+    const addf = e.target.closest('[data-addfmt]'), rmf = e.target.closest('[data-rmfmt]');
+    if (day) {
+      const [c, f, d] = day.dataset.day.split('|'); const arr = chan(c).formats[f].days; const n = +d;
+      const i = arr.indexOf(n); i >= 0 ? arr.splice(i, 1) : arr.push(n);
+    } else if (defp) {
+      const [c, f, p] = defp.dataset.defp.split('|'); const arr = chan(c).formats[f].platforms;
+      const i = arr.indexOf(p); if (i >= 0) { if (arr.length > 1) arr.splice(i, 1); } else arr.push(p);
+    } else if (addf) {
+      const [c, f] = addf.dataset.addfmt.split('|'); chan(c).formats[f] = { platforms: ['yt'], days: [] };
+    } else if (rmf) {
+      const [c, f] = rmf.dataset.rmfmt.split('|');
+      if (state.items.some(i => i.channel === c && i.format === f)) { toast('This channel still has full-length posts — delete them first'); return; }
+      delete chan(c).formats[f];
+    } else return;
+    save(); renderSettings(); renderAll();
+  });
+  $('#exportBtn').onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `content-calendar-${todayStr()}.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $('#importFile').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const s = JSON.parse(await f.text());
+      if (!Array.isArray(s.items) || !Array.isArray(s.channels)) throw new Error('bad file');
+      state = s; save(); renderAll(); renderSettings(); toast(`Imported ${s.items.length} posts`);
+    } catch (err) { toast('That file is not a content calendar export'); }
+    e.target.value = '';
+  };
+  $('#resetBtn').onclick = () => {
+    if (!confirm('Delete ALL posts? Channels and posting days are kept. Export a backup first if unsure.')) return;
+    state.items = []; save(); renderAll(); toast('All posts deleted');
+  };
+
+  // re-render at midnight / when returning to the tab so "today" stays right
+  let lastDay = todayStr();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); } });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
