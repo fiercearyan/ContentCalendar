@@ -66,7 +66,19 @@
   .ccard table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .ccard td { padding: 4px 0; border-top: 1px solid var(--line); }
   .ccard td.r { text-align: right; color: var(--muted); }
-  .ccard .left { font-size: 11px; color: var(--warn); }
+  .ccard .fmt-h { margin: 12px 0 6px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+  .ccard .fmt-h b { color: var(--text); }
+  .buckets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+  .bk { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; text-align: left; font-size: 11px; color: var(--muted); }
+  .bk b { display: block; font-size: 18px; }
+  .bk.todo b { color: var(--warn); } .bk.sch b { color: #60a5fa; } .bk.ok b { color: var(--ok); }
+  .bk:hover { border-color: #444b5a; }
+  .prow2 { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; margin: 6px 0; }
+  .prow2 .r { color: var(--muted); }
+  .prow2 .g { color: var(--ok); } .prow2 .b { color: #60a5fa; } .prow2 .m { color: var(--warn); } .prow2 .of { color: var(--muted); }
+  .sbar { grid-column: 1 / -1; display: flex; height: 5px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+  .sbar .g { background: var(--ok); } .sbar .b { background: #60a5fa; }
+  .inprod { margin-top: 8px; font-size: 12px; color: var(--muted); }
   .ccard .next { margin-top: 10px; font-size: 12px; color: var(--muted); }
   .ccard .next b { color: var(--text); font-weight: 500; }
   .bar { height: 6px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-top: 4px; }
@@ -100,6 +112,7 @@
   .chip.overdue { border-color: rgba(248,113,113,.55); border-left-color: var(--bad); }
   .pf { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: #2b303b; color: var(--muted); }
   .pf.on { background: rgba(52,211,153,.18); color: var(--ok); }
+  .pf.sch { background: rgba(96,165,250,.18); color: #60a5fa; }
   .fmt { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
   .stage { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #262b35; color: #b9c0cd; }
 
@@ -141,6 +154,10 @@
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
   .pgrid { display: grid; gap: 6px; }
+  .pseg button.on.todo { border-color: var(--muted); color: var(--text); }
+  .pseg button.on.scheduled { border-color: #60a5fa; color: #60a5fa; }
+  .pseg button.on.posted { border-color: var(--ok); color: var(--ok); }
+  .pseg button:disabled { opacity: .4; cursor: default; }
   .prow { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
   .prow.off { opacity: .5; }
   .prow label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); margin: 0; }
@@ -198,7 +215,7 @@
     </div>
     <div class="slider" data-key="st" role="radiogroup" aria-label="Status">
       <span class="knob"></span>
-      <button data-v="scheduled">Scheduled</button><button data-v="posted">Posted</button><button data-v="all">All</button>
+      <button data-v="todo">Not scheduled</button><button data-v="scheduled">Scheduled</button><button data-v="posted">Posted</button><button data-v="all">All</button>
     </div>
     <span class="fcount" id="fcount"></span>
   </div>
@@ -214,12 +231,14 @@
     <div class="board-wrap"><div class="board" id="board"></div></div>
     <div class="legend">
       <span><span class="pf on">IG</span> posted</span>
-      <span><span class="pf">IG</span> planned, not posted yet</span>
+      <span><span class="pf sch">IG</span> scheduled</span>
+      <span><span class="pf">IG</span> not scheduled yet</span>
       <span>Red border = date passed, not fully posted</span>
       <span>Hover a cell → + to add</span>
     </div>
 
-    <h2>Channels · made vs posted</h2>
+    <h2>Channels · made → scheduled → posted</h2>
+    <div class="legend" style="margin:-4px 0 10px"><span>Per platform: <span style="color:var(--ok)">posted</span> · <span style="color:#60a5fa">scheduled</span> · <span style="color:var(--warn)">not scheduled</span>. Tap a box to see those videos.</span></div>
     <div class="channels" id="channelCards"></div>
   </section>
 
@@ -241,6 +260,7 @@
     <div class="filters">
       <input type="text" id="fText" placeholder="Search title / notes" />
       <select id="fChannel"></select>
+      <span id="fFmtNote" style="display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px"></span>
     </div>
     <table class="list">
       <thead><tr><th>Date</th><th>Channel</th><th>Title</th><th>Type</th><th>Stage</th><th>Platforms</th></tr></thead>
@@ -277,7 +297,7 @@
       <div class="field"><label>Time (optional)</label><input type="time" id="eTime" /></div>
     </div>
     <div class="field"><label>Stage</label><div class="seg" id="eStage"></div></div>
-    <div class="field"><label>Platforms (planned → posted)</label><div class="pgrid" id="ePlatforms"></div></div>
+    <div class="field"><label>Platforms</label><div class="pgrid" id="ePlatforms"></div></div>
     <div class="field"><label>Link (optional)</label><input type="url" id="eLink" placeholder="https://…" /></div>
     <div class="field"><label>Notes</label><textarea id="eNotes" placeholder="Hook, script link, music, thumbnail idea…"></textarea></div>
     <div class="actions">
@@ -318,15 +338,15 @@
   const DEFAULT_CHANNELS = [
     {
       id: 'td', name: 'Tech Decoded', color: '#38bdf8', handles: 'IG @techdecoded49 · YouTube',
-      formats: { short: { platforms: ['ig', 'yt'], days: [] } }, m1: true,
+      formats: { short: { platforms: ['ig', 'yt'], days: [] } }, m1: true, m2: true,
     },
     {
       id: 'sos', name: 'Secrets of Sanatan', color: '#fb923c', handles: 'IG @mewwwssss · YouTube',
-      formats: { short: { platforms: ['yt'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true,
+      formats: { short: { platforms: ['yt'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true, m2: true,
     },
     {
       id: 'ttr', name: 'The Thinking Room', color: '#a78bfa', handles: 'IG @thethinkingroom.in · YouTube · Facebook',
-      formats: { short: { platforms: ['ig', 'yt', 'fb'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true,
+      formats: { short: { platforms: ['ig', 'yt', 'fb'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true, m2: true,
     },
   ];
 
@@ -336,6 +356,7 @@
   let editingId = null;
   let draft = null;
   let monthCursor = firstOfMonth(new Date());
+  let listFormat = '';
 
   function load() {
     try {
@@ -348,9 +369,22 @@
     return fixState({ version: 1, channels: structuredClone(DEFAULT_CHANNELS), channelsAt: 0, items: [] });
   }
   function fixState(s) {
-    if (!Array.isArray(s.channels) || !s.channels.length) s.channels = structuredClone(DEFAULT_CHANNELS);
+    if (!Array.isArray(s.channels) || !s.channels.length) {
+      s.channels = structuredClone(DEFAULT_CHANNELS);
+      // existing posts: let the one-time updates below run on them; a brand-new device keeps the flags so it can't override synced settings
+      if ((s.items || []).length) s.channels.forEach(c => { delete c.m1; delete c.m2; });
+    }
     s.deleted = s.deleted || {};
     const now = Date.now();
+    s.channels.forEach(c => {
+      if (c.m2) return;
+      (s.items || []).forEach(i => {
+        if (i.channel === c.id && /scheduled on YouTube/.test(i.notes || '') && i.platforms.yt && !i.platforms.yt.posted && !i.platforms.yt.scheduled) {
+          i.platforms.yt.scheduled = true; i.updatedAt = now;
+        }
+      });
+      c.m2 = true; s.channelsAt = now;
+    });
     s.channels.forEach(c => {
       if (c.m1) return;
       if (c.id === 'ttr') {
@@ -478,6 +512,15 @@
   const chan = id => state.channels.find(c => c.id === id) || state.channels[0];
   const planned = it => Object.keys(it.platforms).filter(p => it.platforms[p].planned);
   const postedCount = it => planned(it).filter(p => it.platforms[p].posted).length;
+  // per platform: 'posted' | 'scheduled' | 'todo' (made or in production, not scheduled yet)
+  const pstate = (it, p) => it.platforms[p]?.posted ? 'posted' : it.platforms[p]?.scheduled ? 'scheduled' : 'todo';
+  // per video (all planned platforms): posted everywhere / everything left is scheduled / something still needs scheduling
+  function bucket(it) {
+    const pl = planned(it);
+    if (pl.length && pl.every(p => it.platforms[p].posted)) return 'posted';
+    if (pl.some(p => pstate(it, p) === 'todo')) return 'todo';
+    return 'scheduled';
+  }
   function status(it) {
     const pl = planned(it), done = postedCount(it);
     if (pl.length && done === pl.length) return 'posted';
@@ -490,7 +533,7 @@
     const format = over.format || Object.keys(c.formats)[0];
     const defaults = (c.formats[format] || { platforms: [] }).platforms;
     const platforms = {};
-    Object.keys(PLATFORMS).forEach(p => platforms[p] = { planned: defaults.includes(p), posted: false });
+    Object.keys(PLATFORMS).forEach(p => platforms[p] = { planned: defaults.includes(p), scheduled: false, posted: false });
     return {
       id: uid(), title: '', channel: c.id, format, date: todayStr(), time: '',
       stage: 'Idea', platforms, link: '', notes: '', ...over, platforms: over.platforms || platforms,
@@ -514,13 +557,12 @@
       default: return true;
     }
   }
-  // "Posted" means posted on the chosen platform; with All platforms, posted everywhere it was planned
-  const isPosted = it => pfKey() ? !!it.platforms[pfKey()].posted : status(it) === 'posted';
+  // With a platform picked, the state on that platform; with All platforms, the state of the whole video (see bucket)
+  const viewState = it => pfKey() ? pstate(it, pfKey()) : bucket(it);
+  const isPosted = it => viewState(it) === 'posted';
   function visible(it) {
     if (!matchPF(it)) return false;
-    if (VF.st === 'scheduled') return !isPosted(it);
-    if (VF.st === 'posted') return isPosted(it);
-    return true;
+    return VF.st === 'all' || viewState(it) === VF.st;
   }
   function placeKnobs() {
     document.querySelectorAll('.slider').forEach(sl => {
@@ -548,7 +590,7 @@
   function chipHTML(it, opts = {}) {
     const c = chan(it.channel);
     const st = status(it);
-    const pfs = planned(it).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${it.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join('');
+    const pfs = planned(it).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${pstate(it, p) === 'posted' ? 'on' : pstate(it, p) === 'scheduled' ? 'sch' : ''}" title="${PLATFORMS[p].label}: ${pstate(it, p) === 'todo' ? 'not scheduled' : pstate(it, p)}">${PLATFORMS[p].short}</span>`).join('');
     const title = it.title || (opts.showChannel ? `${c.name} ${it.format === 'long' ? 'video' : 'short'}` : (it.format === 'long' ? 'Full video (TBD)' : 'Short (TBD)'));
     return `<button class="chip ${st === 'posted' ? 'done' : ''} ${st === 'overdue' ? 'overdue' : ''}" style="--c:${c.color}" data-id="${it.id}" title="${esc(title)}">
       <span class="t">${opts.showChannel ? `<span style="color:${c.color}">●</span> ` : ''}${esc(title)}</span>
@@ -611,23 +653,32 @@
       const made = mine.filter(isMade);
       const rows = [];
       Object.keys(c.formats).forEach(f => {
+        const vids = made.filter(i => i.format === f);
+        if (!vids.length && !c.formats[f].platforms.length) return;
+        const n = k => vids.filter(i => bucket(i) === k).length;
+        const label = f === 'long' ? 'Full videos' : 'Reels';
+        rows.push(`<div class="fmt-h"><b>${label}</b> · ${vids.length} made</div>
+          <div class="buckets">
+            <button class="bk todo" data-jump="${c.id}|${f}|todo"><b>${n('todo')}</b> not scheduled</button>
+            <button class="bk sch" data-jump="${c.id}|${f}|scheduled"><b>${n('scheduled')}</b> scheduled</button>
+            <button class="bk ok" data-jump="${c.id}|${f}|posted"><b>${n('posted')}</b> posted</button>
+          </div>`);
         Object.keys(PLATFORMS).forEach(p => {
-          // every video made for this format that should go to platform p, vs. how many are up there
-          const pl = made.filter(i => i.format === f && i.platforms[p]?.planned);
+          const pl = vids.filter(i => i.platforms[p]?.planned);
           if (!pl.length && !c.formats[f].platforms.includes(p)) return;
-          const done = pl.filter(i => i.platforms[p].posted).length;
-          const pct = pl.length ? Math.round(done / pl.length * 100) : 0;
-          const left = pl.length - done;
-          rows.push(`<tr><td>${OUTLET[p][f]}
-            <div class="bar"><i style="width:${pct}%"></i></div></td><td class="r">${done}/${pl.length} posted${left ? `<br><span class="left">${left} to go</span>` : ''}</td></tr>`);
+          const cnt = k => pl.filter(i => pstate(i, p) === k).length;
+          const w = k => pl.length ? (cnt(k) / pl.length * 100).toFixed(1) : 0;
+          rows.push(`<div class="prow2"><span>${OUTLET[p][f]}</span>
+            <span class="r"><span class="g">${cnt('posted')}</span> · <span class="b">${cnt('scheduled')}</span> · <span class="m">${cnt('todo')}</span> <span class="of">of ${pl.length}</span></span>
+            <div class="sbar"><i class="g" style="width:${w('posted')}%"></i><i class="b" style="width:${w('scheduled')}%"></i></div></div>`);
         });
       });
       const inProd = mine.filter(i => !isMade(i)).length;
-      if (inProd) rows.push(`<tr><td colspan="2" class="r" style="text-align:left">${inProd} more in production (idea → editing)</td></tr>`);
+      if (inProd) rows.push(`<div class="inprod">${inProd} more in production (idea → editing)</div>`);
       const next = sortItems(mine.filter(i => i.date >= t && status(i) !== 'posted'))[0];
       return `<div class="ccard" style="--c:${c.color}">
         <h3>${esc(c.name)}</h3><div class="handles">${esc(c.handles || '')}</div>
-        <table>${rows.join('')}</table>
+        ${rows.join('')}
         <div class="next">Next up: ${next ? `<b>${esc(next.title || (next.format === 'long' ? 'Full video' : 'Short'))}</b> · ${fmtDate(next.date)} · ${esc(next.stage)}` : '<b>nothing planned</b>'}</div>
       </div>`;
     }).join('');
@@ -659,16 +710,17 @@
     const q = $('#fText').value.trim().toLowerCase();
     const ch = $('#fChannel').value;
     let rows = sortItems(state.items.filter(visible)).filter(i =>
-      (!ch || i.channel === ch) && (!q || (i.title + ' ' + i.notes).toLowerCase().includes(q)));
+      (!ch || i.channel === ch) && (!listFormat || i.format === listFormat) && (!q || (i.title + ' ' + i.notes).toLowerCase().includes(q)));
+    $('#fFmtNote').innerHTML = listFormat ? `${listFormat === 'long' ? 'Full videos' : 'Reels'} only <button class="btn small" id="fFmtClear">×</button>` : '';
     if (VF.st !== 'scheduled') rows = rows.reverse(); // scheduled: soonest first; otherwise newest first
     $('#listBody').innerHTML = rows.length ? rows.map(i => {
       const c = chan(i.channel), s = status(i);
-      const pfs = planned(i).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${i.platforms[p].posted ? 'on' : ''}">${PLATFORMS[p].short}</span>`).join(' ');
+      const pfs = planned(i).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${pstate(i, p) === 'posted' ? 'on' : pstate(i, p) === 'scheduled' ? 'sch' : ''}" title="${PLATFORMS[p].label}: ${pstate(i, p) === 'todo' ? 'not scheduled' : pstate(i, p)}">${PLATFORMS[p].short}</span>`).join(' ');
       const color = { posted: 'var(--ok)', overdue: 'var(--bad)', partial: 'var(--warn)', upcoming: 'var(--muted)' }[s];
       return `<tr data-id="${i.id}"><td>${fmtDate(i.date)}${i.time ? ' · ' + i.time : ''}</td>
         <td><span class="dot" style="--c:${c.color}"></span>${esc(c.name)}</td>
         <td>${esc(i.title || '—')}</td><td>${FORMATS[i.format]}</td>
-        <td><span style="color:${color}">${s === 'posted' ? 'Posted' : s === 'overdue' ? 'Overdue · ' + esc(i.stage) : esc(i.stage)}</span></td>
+        <td><span style="color:${color}">${s === 'posted' ? 'Posted' : (s === 'overdue' ? 'Overdue · ' : '') + (bucket(i) === 'scheduled' ? 'Scheduled' : isMade(i) ? 'Not scheduled' : esc(i.stage))}</span></td>
         <td>${pfs}</td></tr>`;
     }).join('') : `<tr><td colspan="6" class="empty">No posts match. Add one with “+ New post”.</td></tr>`;
   }
@@ -745,9 +797,11 @@
     $('#eStage').innerHTML = STAGES.map(s => `<button class="${draft.stage === s ? 'on' : ''}" data-stage="${s}">${s}</button>`).join('');
     $('#ePlatforms').innerHTML = Object.keys(PLATFORMS).map(p => {
       const v = draft.platforms[p];
+      const st = pstate(draft, p);
       return `<div class="prow ${v.planned ? '' : 'off'}"><span>${PLATFORMS[p].label}</span>
         <label><input type="checkbox" data-pp="${p}" ${v.planned ? 'checked' : ''}/> Planned</label>
-        <label><input type="checkbox" data-pd="${p}" ${v.posted ? 'checked' : ''} ${v.planned ? '' : 'disabled'}/> Posted</label></div>`;
+        <div class="seg pseg">${[['todo', 'Not scheduled'], ['scheduled', 'Scheduled'], ['posted', 'Posted']].map(([k, l]) =>
+          `<button type="button" class="${st === k ? 'on ' + k : ''}" data-ps="${p}|${k}" ${v.planned ? '' : 'disabled'}>${l}</button>`).join('')}</div></div>`;
     }).join('');
   }
   function closeEditor() { $('#backdrop').classList.remove('open'); editingId = null; draft = null; }
@@ -759,8 +813,7 @@
     draft.notes = $('#eNotes').value;
     const pl = planned(draft);
     if (!pl.length) { toast('Pick at least one platform'); return; }
-    if (pl.every(p => draft.platforms[p].posted)) draft.stage = 'Posted';
-    else if (draft.stage === 'Posted') draft.stage = 'Ready';
+    syncStage();
     touch(draft);
     if (editingId) state.items = state.items.map(i => i.id === editingId ? draft : i);
     else state.items.push(draft);
@@ -804,6 +857,14 @@
   $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchView(b.dataset.view); });
   $('#newBtn').addEventListener('click', () => openEditor(newItem(), true));
   $('#planBtn').addEventListener('click', planTwoWeeks);
+  $('#channelCards').addEventListener('click', e => {
+    const b = e.target.closest('[data-jump]'); if (!b) return;
+    const [c, f, st] = b.dataset.jump.split('|');
+    VF.pf = 'all'; VF.st = st;
+    try { localStorage.setItem(FK, JSON.stringify(VF)); } catch (err) {}
+    $('#fChannel').value = c; $('#fText').value = ''; listFormat = f;
+    switchView('list'); renderAll();
+  });
   $('#filterbar').addEventListener('click', e => {
     const b = e.target.closest('.slider button'); if (!b) return;
     VF[b.closest('.slider').dataset.key] = b.dataset.v;
@@ -826,6 +887,7 @@
   $('#todayM').onclick = () => { monthCursor = firstOfMonth(new Date()); renderMonth(); };
   $('#monthFilter').onchange = renderMonth;
   ['#fText', '#fChannel'].forEach(s => $(s).addEventListener('input', renderList));
+  $('#fFmtNote').addEventListener('click', e => { if (e.target.id === 'fFmtClear') { listFormat = ''; renderList(); } });
 
   // editor events
   $('#eChannel').onchange = () => { draft.channel = $('#eChannel').value; fillFormats(); applyDefaultPlatforms(); renderEditorBits(); };
@@ -833,18 +895,27 @@
   $('#eStage').onclick = e => {
     const b = e.target.closest('[data-stage]'); if (!b) return;
     draft.stage = b.dataset.stage;
-    if (draft.stage === 'Posted') planned(draft).forEach(p => draft.platforms[p].posted = true);
+    if (draft.stage === 'Posted') planned(draft).forEach(p => { draft.platforms[p].posted = true; draft.platforms[p].scheduled = false; });
     renderEditorBits();
   };
   $('#ePlatforms').onchange = e => {
     const t = e.target;
-    if (t.dataset.pp) { draft.platforms[t.dataset.pp].planned = t.checked; if (!t.checked) draft.platforms[t.dataset.pp].posted = false; }
-    if (t.dataset.pd) draft.platforms[t.dataset.pd].posted = t.checked;
+    if (t.dataset.pp) { const v = draft.platforms[t.dataset.pp]; v.planned = t.checked; if (!t.checked) { v.posted = false; v.scheduled = false; } }
+    syncStage(); renderEditorBits();
+  };
+  $('#ePlatforms').onclick = e => {
+    const b = e.target.closest('[data-ps]'); if (!b || b.disabled) return;
+    const [p, k] = b.dataset.ps.split('|'); const v = draft.platforms[p];
+    v.posted = k === 'posted'; v.scheduled = k === 'scheduled';
+    syncStage(); renderEditorBits();
+  };
+  // scheduling or posting means the video is made; posted everywhere means stage Posted
+  function syncStage() {
     const pl = planned(draft);
     if (pl.length && pl.every(p => draft.platforms[p].posted)) draft.stage = 'Posted';
     else if (draft.stage === 'Posted') draft.stage = 'Ready';
-    renderEditorBits();
-  };
+    else if (pl.some(p => draft.platforms[p].posted || draft.platforms[p].scheduled) && STAGES.indexOf(draft.stage) < STAGES.indexOf('Ready')) draft.stage = 'Ready';
+  }
   $('#eSave').onclick = saveEditor;
   $('#eCancel').onclick = closeEditor;
   $('#eDelete').onclick = () => {
@@ -854,7 +925,7 @@
   $('#eDup').onclick = () => {
     const copy = structuredClone(draft);
     copy.id = uid(); copy.date = ymd(addDays(parse(copy.date), 1)); copy.stage = 'Idea';
-    Object.values(copy.platforms).forEach(v => v.posted = false);
+    Object.values(copy.platforms).forEach(v => { v.posted = false; v.scheduled = false; });
     closeEditor(); openEditor(copy, true);
   };
   $('#backdrop').addEventListener('mousedown', e => { if (e.target.id === 'backdrop') closeEditor(); });
