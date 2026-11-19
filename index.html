@@ -196,14 +196,91 @@ section{display:flex;flex-direction:column;gap:12px}
 .lock.open{display:grid}
 .lock form{width:min(380px,100%);padding:28px;display:flex;flex-direction:column;gap:14px}
 
+/* phone-only bits are hidden on desktop */
+.mob-only,.mob-in,.ftog,.mtap,.mdots,.plus,.mob-only-i{display:none}
+.agenda{overflow:hidden}
+.ag-day{padding:0 14px}
+.ag-day+.ag-day{border-top:1px solid var(--line)}
+.ag-h{display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.ag-row{width:100%;display:flex;align-items:flex-start;gap:10px;text-align:left;border:0;border-top:1px solid var(--l3);background:transparent;padding:11px 0;font-size:14px;white-space:normal}
+.ag-h+.ag-row{border-top:0}
+.ag-row.od .ell{color:var(--r)!important}
+.fm{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.ftog{height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);font-size:13.5px;font-weight:500;align-items:center;gap:8px}
+.fbadge{min-width:18px;height:18px;border-radius:9px;background:#F5B83D;color:#141210;font-size:11px;font-weight:700;display:inline-grid;place-items:center;padding:0 5px}
+
 @media (max-width:760px){
   header{position:static}
-  .wrap{padding-left:14px;padding-right:14px}
-  .pgrid{grid-template-columns:90px minmax(0,1fr) 110px}
+  .wrap{padding-left:16px;padding-right:16px}
+  .desk-only,.desk-in{display:none!important}
+  .mob-only{display:block}.mob-in{display:inline}.mob-only-i{display:inline-flex;align-items:center}
+  /* header: brand + actions on one line, tabs full width below */
+  .hrow{gap:12px;padding-top:12px;padding-bottom:12px}
+  #nav{order:5;width:100%}
+  #nav button{flex:1;padding:8px 4px;font-size:13.5px}
+  .hact{gap:8px!important}
+  .iconbtn{width:34px;height:34px}
+  .hact .btn.primary{height:34px;width:34px;padding:0;justify-content:center;border-radius:9px}
+  .hact .btn.primary .lbl,.hact .btn.primary .kbd{display:none}
+  .hact .btn.primary .plus{display:inline;font-size:22px;font-weight:500;line-height:1}
+  .esc{display:none}
+  .dtitle{font-size:19px}
+  .dfoot .btn{padding:0 12px!important}
+  /* filters collapse behind one button */
+  .frow{gap:10px;padding-bottom:12px}
+  .ftog{display:inline-flex}
+  .vsep{display:none}
+  .fgroup{display:none!important;width:100%;flex-direction:column;align-items:flex-start!important;gap:6px!important}
+  #filters.fopen .fgroup{display:flex!important}
+  .scrollx{max-width:100%;overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .scrollx::-webkit-scrollbar{display:none}
+  .fcount{margin-left:auto}
+  .ftog{order:-2}
+  /* content */
+  main{padding-top:20px;padding-bottom:120px}
+  main>div{gap:24px!important}
+  h1{font-size:22px}
+  .headline{font-size:24px!important;margin-top:4px!important}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:12px 14px;border-radius:12px;gap:2px}
+  .kpi .l{font-size:12px}
+  .kpi .v{font-size:24px;margin-top:2px}
+  .kpi .s{font-size:11px;line-height:1.35}
+  .kbar{margin-top:6px}
+  section{gap:10px}
+  section .sub{display:none}
+  .att{grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"w t t" "w b a";gap:8px 10px;padding:12px 14px}
+  .att>span:first-child{grid-area:w;align-self:start;padding-top:2px}
+  .att>.open{grid-area:t}
+  .att>.bd{grid-area:b}
+  .att>.ac{grid-area:a}
+  .att .chn{display:none}
+  .mini{height:28px;padding:0 9px;font-size:12px}
+  .pcard{padding:16px;gap:14px}
+  .pfmt{padding-top:14px}
+  /* calendar: dots, tap a day to list it below */
+  .mtitle{min-width:0!important;font-size:20px;margin-right:auto}
+  .mrow.h>div{padding:8px 0;text-align:center;font-size:10.5px;letter-spacing:.04em}
+  .mday{position:relative;min-height:58px;padding:5px 3px;align-items:center;gap:4px}
+  .mday .fx{justify-content:center!important;margin:0!important}
+  .mnum{font-size:12.5px;padding:2px 6px}
+  .madd,.mchip,.more{display:none!important}
+  .mdots{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;max-width:36px}
+  .mtap{display:block;position:absolute;inset:0;border:0;background:transparent;padding:0;z-index:1}
+  .mday.sel{box-shadow:inset 0 0 0 2px #F5B83D;border-radius:6px}
+  /* posts: two-line rows */
+  .prowb.pgrid{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t s" "d s";gap:3px 10px;padding:11px 14px}
   .pgrid>.hm{display:none}
-  .att{grid-template-columns:60px minmax(0,1fr)}
-  .att>.bd,.att>.ac{grid-column:2}
-  .mday{min-height:84px;padding:4px}.mchip .ell,.mchip .pds{display:none}
+  .c-title{grid-area:t}.c-date{grid-area:d;font-size:11.5px!important;display:flex;align-items:center;gap:4px;min-width:0;white-space:nowrap;overflow:hidden}
+  .c-st{grid-area:s}
+  .ghead{padding:12px 14px 6px}
+  .search{width:100%}
+  /* drawer */
+  .dbody{padding:16px;gap:18px}
+  .dfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  .platrow{gap:8px;padding:10px}
+  .platrow>span:first-child{width:64px!important;font-size:13px!important}
+  .platrow .iseg button{font-size:11.5px!important}
 }
 </style>
 </head>
@@ -216,11 +293,11 @@ section{display:flex;flex-direction:column;gap:12px}
     </div>
     <nav class="seg" id="nav"></nav>
     <div class="f1"></div>
-    <div class="fx" style="gap:10px;flex:none">
+    <div class="fx hact" style="gap:10px;flex:none">
       <span class="syncdot" id="sync" title="Saved"></span>
       <button class="iconbtn" data-act="theme" id="themeBtn" title="Switch theme"><span class="themei"></span></button>
-      <button class="btn" data-act="plan" title="Add idea slots on posting days for the next 2 weeks">Plan 2 weeks</button>
-      <button class="btn primary" data-act="new">New post <span class="kbd">N</span></button>
+      <button class="btn desk-only" data-act="plan" title="Add idea slots on posting days for the next 2 weeks">Plan 2 weeks</button>
+      <button class="btn primary" data-act="new" title="New post"><span class="plus">+</span><span class="lbl">New post</span> <span class="kbd">N</span></button>
     </div>
   </div>
   <div class="wrap frow" id="filters"></div>
@@ -534,13 +611,16 @@ section{display:flex;flex-direction:column;gap:12px}
     const sfs = [['all', 'All', null], ['none', 'To schedule', 'var(--faint)'], ['scheduled', 'Scheduled', '#78B4F6'], ['posted', 'Posted', '#5BD69A']]
       .map(([id, l, d]) => `<button class="${ui.sf === id ? 'on' : ''}" data-act="sf" data-v="${id}">${d ? `<span class="dot" style="width:6px;height:6px;background:${d}"></span>` : ''}${l}</button>`).join('');
     const active = ui.cf !== 'all' || ui.pf !== 'all' || ui.sf !== 'all';
+    const nAct = (ui.cf !== 'all') + (ui.pf !== 'all') + (ui.sf !== 'all');
+    F.classList.toggle('fopen', !!ui.fopen);
     F.innerHTML = `
-      <div class="fx" style="gap:8px"><span class="cap">Channel</span><div class="fx" style="gap:4px;flex-wrap:wrap">${chs}</div></div>
+      <button class="ftog" data-act="ftog"><span>Filters</span>${nAct ? `<span class="fbadge">${nAct}</span>` : ''}<span style="color:var(--dim)">${ui.fopen ? '▴' : '▾'}</span></button>
+      <div class="fx fgroup" style="gap:8px"><span class="cap">Channel</span><div class="fx scrollx" style="gap:4px;flex-wrap:wrap">${chs}</div></div>
       <div class="vsep"></div>
-      <div class="fx" style="gap:8px"><span class="cap">Platform</span><div class="seg sm">${pfs}</div></div>
-      <div class="fx" style="gap:8px"><span class="cap">Stage</span><div class="seg sm">${sfs}</div></div>
-      <div class="mono" style="font-size:12.5px;color:var(--dim)">${V.length} of ${P.length} posts</div>
-      ${active ? '<button class="linkbtn" data-act="clear">Clear filters</button>' : ''}`;
+      <div class="fx fgroup" style="gap:8px"><span class="cap">Platform</span><div class="scrollx"><div class="seg sm">${pfs}</div></div></div>
+      <div class="fx fgroup" style="gap:8px"><span class="cap">Stage</span><div class="scrollx"><div class="seg sm">${sfs}</div></div></div>
+      <div class="mono fcount" style="font-size:12.5px;color:var(--dim)">${V.length} of ${P.length} posts</div>
+      ${active ? '<button class="linkbtn" data-act="clear">Clear</button>' : ''}`;
   }
 
   function chipHTML(p) {
@@ -577,9 +657,9 @@ section{display:flex;flex-direction:column;gap:12px}
         const c = chan(p.channel), late = od(p), dd = Math.round((pd(TODAY) - pd(p.date)) / 864e5);
         return `<div class="att">
           <span class="mono" style="font-size:12px;color:${late ? 'var(--r)' : 'var(--a2)'}">${late ? dd + 'd late' : 'Today'}</span>
-          <button class="open" data-act="open" data-id="${p.id}"><span class="dot" style="width:8px;height:8px;background:${c.color}"></span><span class="ell" style="font-weight:500">${esc(title(p))}</span><span class="ell" style="font-size:12.5px;color:var(--dim);min-width:0">${esc(c.name)}</span></button>
+          <button class="open" data-act="open" data-id="${p.id}"><span class="dot" style="width:8px;height:8px;background:${c.color}"></span><span class="ell" style="font-weight:500">${esc(title(p))}</span><span class="ell chn" style="font-size:12.5px;color:var(--dim);min-width:0">${esc(c.name)}</span></button>
           <div class="fx bd" style="gap:4px">${badges(p)}</div>
-          <div class="fx ac" style="gap:6px"><button class="mini b" data-act="all-sched" data-id="${p.id}">Mark scheduled</button><button class="mini g" data-act="all-posted" data-id="${p.id}">Mark posted</button></div>
+          <div class="fx ac" style="gap:6px"><button class="mini b" data-act="all-sched" data-id="${p.id}"><span class="desk-in">Mark scheduled</span><span class="mob-in">Scheduled</span></button><button class="mini g" data-act="all-posted" data-id="${p.id}"><span class="desk-in">Mark posted</span><span class="mob-in">Posted</span></button></div>
         </div>`;
       }).join('')}</div></section>` : '';
 
@@ -621,19 +701,40 @@ section{display:flex;flex-direction:column;gap:12px}
 
     return `<div style="display:flex;flex-direction:column;gap:32px">
       <div><div class="mono cap" style="font-size:12px">${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][td.getDay()]}, ${td.getDate()} ${MON[td.getMonth()]}</div>
-        <h1 style="margin-top:6px;font-size:30px;letter-spacing:-.025em;text-wrap:balance">${today.length} post${today.length === 1 ? '' : 's'} due today${ods.length ? `, ${ods.length} overdue.` : '. Nothing overdue.'}</h1></div>
+        <h1 class="headline" style="margin-top:6px;font-size:30px;letter-spacing:-.025em;text-wrap:balance">${today.length} post${today.length === 1 ? '' : 's'} due today${ods.length ? `, ${ods.length} overdue.` : '. Nothing overdue.'}</h1></div>
       <div class="kpis">${kpis}</div>
       ${attHTML}
       <section>
         <div class="fx" style="align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Runway</h2><span class="sub" style="white-space:nowrap">${nice(days[0])} – ${nice(days[N - 1])}</span><div class="f1"></div>
           <div class="legend"><span><span class="bdg posted sm">IG</span>posted</span><span><span class="bdg scheduled sm">IG</span>scheduled</span><span><span class="bdg none sm">IG</span>to schedule</span><span><span style="width:12px;height:12px;border-radius:3px;border:1px solid rgba(242,107,107,.6)"></span>overdue</span></div></div>
-        <div class="tl"><div style="min-width:${180 + N * 100}px">${head}${rows}</div></div>
+        <div class="tl desk-only"><div style="min-width:${180 + N * 100}px">${head}${rows}</div></div>
+        ${agenda(V, TODAY, 14)}
       </section>
       <section>
         <div class="fx" style="align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Pipeline by channel</h2><span class="sub">Made → scheduled → posted, per platform. Tap a number to see those posts.</span></div>
         <div class="pipe">${pipe}</div>
       </section>
     </div>`;
+  }
+
+  // phone: a plain day-by-day list instead of the wide board
+  function agenda(V, from, n) {
+    const days = Array.from({ length: n }, (_, i) => add(from, i));
+    const out = days.map(d => {
+      const L = V.filter(p => p.date === d).sort(byDate); if (!L.length) return '';
+      return `<div class="ag-day"><div class="ag-h"><span>${d === TODAY ? 'Today' : d === add(TODAY, 1) ? 'Tomorrow' : nice(d)}</span><span class="mono" style="color:var(--dim);font-weight:400">${L.length}</span></div>
+        ${L.map(agRow).join('')}</div>`;
+    }).join('');
+    return `<div class="mob-only agenda card">${out || '<div class="sub" style="padding:16px">Nothing in the next two weeks for these filters.</div>'}</div>`;
+  }
+  function agRow(p) {
+    const c = chan(p.channel);
+    return `<button class="ag-row ${od(p) ? 'od' : ''}" data-act="open" data-id="${p.id}">
+      <span class="dot" style="width:8px;height:8px;background:${c.color};margin-top:5px"></span>
+      <span class="f1" style="display:flex;flex-direction:column;gap:5px;min-width:0">
+        <span class="ell" style="font-weight:500;color:${isIdea(p) ? 'var(--dim)' : 'var(--text)'}">${esc(title(p))}</span>
+        <span class="fx" style="gap:4px;flex-wrap:wrap"><span class="fm">${p.format === 'long' ? 'Full' : 'Short'}</span>${badges(p, 'sm')}</span>
+      </span>${pill(status(p))}</button>`;
   }
 
   function viewMonth() {
@@ -643,8 +744,11 @@ section{display:flex;flex-direction:column;gap:12px}
     const body = weeks.map(w => `<div class="mrow">${w.map(d => {
       const inM = d.slice(0, 7) === ui.month, L = V.filter(p => p.date === d).sort(byDate), ex = ui.expand === d, show = ex ? L : L.slice(0, 3);
       const cls = ['mday', !inM ? 'out' : '', d === TODAY ? 'today' : '', d < TODAY ? 'past' : ''].join(' ');
-      return `<div class="${cls}">
+      const sel = ui.selDay === d ? ' sel' : '';
+      return `<div class="${cls}${sel}">
+        <button class="mtap" data-act="sel-day" data-d="${d}" aria-label="${nice(d)}"></button>
         <div class="fx" style="justify-content:space-between;margin-bottom:2px"><span class="mnum">${pd(d).getDate()}</span><button class="madd" data-act="new-at" data-d="${d}" title="Add a post">+</button></div>
+        <div class="mdots">${L.slice(0, 6).map(p => `<span class="dot" style="width:6px;height:6px;background:${chan(p.channel).color};${overall(p) === 'posted' ? 'opacity:.45' : ''}"></span>`).join('')}${L.length > 6 ? '<span style="font-size:9px;color:var(--dim)">+</span>' : ''}</div>
         ${show.map(p => { const c = chan(p.channel);
           return `<button class="mchip ${isIdea(p) ? 'idea' : ''} ${od(p) ? 'od' : ''}" data-act="open" data-id="${p.id}" title="${esc(title(p))}"><span class="dot" style="width:6px;height:6px;background:${c.color}"></span><span class="f1 ell">${esc(title(p))}</span><span class="fx pds" style="gap:2px;flex:none">${plats(p).map(k => `<span class="pdot ${pst(p, k)}"></span>`).join('')}</span></button>`; }).join('')}
         ${L.length > 3 ? `<button class="more" data-act="more" data-d="${d}">${ex ? 'Show less' : `+${L.length - 3} more`}</button>` : ''}
@@ -652,14 +756,18 @@ section{display:flex;flex-direction:column;gap:12px}
     }).join('')}</div>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:16px">
       <div class="fx" style="gap:10px;flex-wrap:wrap">
-        <h1 style="min-width:220px">${MON[m - 1]} ${y}</h1>
+        <h1 class="mtitle" style="min-width:220px">${MON[m - 1]} ${y}</h1>
         <button class="btn sm" style="width:32px;padding:0" data-act="m-prev">‹</button>
         <button class="btn sm" style="width:32px;padding:0" data-act="m-next">›</button>
         <button class="btn sm" data-act="m-today">Today</button>
         <div class="f1"></div>
-        <span class="legend" style="font-size:12.5px"><span><span class="pdot posted" style="width:6px;height:6px"></span>posted</span><span><span class="pdot scheduled" style="width:6px;height:6px"></span>scheduled</span><span><span class="pdot none" style="width:6px;height:6px"></span>to schedule</span></span>
+        <span class="legend desk-only" style="font-size:12.5px"><span><span class="pdot posted" style="width:6px;height:6px"></span>posted</span><span><span class="pdot scheduled" style="width:6px;height:6px"></span>scheduled</span><span><span class="pdot none" style="width:6px;height:6px"></span>to schedule</span></span>
       </div>
       <div class="mgrid"><div class="mrow h">${DOW.map(d => `<div class="cap">${d}</div>`).join('')}</div>${body}</div>
+      ${(() => { const sd = ui.selDay && ui.selDay.slice(0, 7) === ui.month ? ui.selDay : (TODAY.slice(0, 7) === ui.month ? TODAY : first);
+        const L = V.filter(p => p.date === sd).sort(byDate);
+        return `<div class="mob-only agenda card"><div class="ag-day"><div class="ag-h"><span>${sd === TODAY ? 'Today · ' : ''}${nice(sd)}</span><button class="linkbtn" data-act="new-at" data-d="${sd}">+ Add</button></div>
+          ${L.map(agRow).join('') || '<div class="sub" style="padding:4px 0 10px">Nothing on this day.</div>'}</div></div>`; })()}
     </div>`;
   }
 
@@ -672,17 +780,17 @@ section{display:flex;flex-direction:column;gap:12px}
       <div class="ghead" style="color:${color}">${label}<span class="mono" style="font-weight:400;color:var(--dim)">${rows.length}</span></div>
       ${rows.map(p => { const c = chan(p.channel);
         return `<button class="prowb pgrid" data-act="open" data-id="${p.id}">
-          <span class="mono" style="font-size:12.5px;color:var(--muted)">${nice(p.date)}</span>
+          <span class="mono c-date" style="font-size:12.5px;color:var(--muted)">${nice(p.date)}<span class="mob-in"> · <span class="dot" style="width:6px;height:6px;background:${c.color}"></span> ${esc(c.name)}</span></span>
           <span class="fx hm" style="gap:8px;min-width:0"><span class="dot" style="background:${c.color}"></span><span class="ell" style="color:var(--muted)">${esc(c.name)}</span></span>
-          <span class="ell" style="font-weight:500;color:${isIdea(p) ? 'var(--dim)' : 'var(--text)'}">${esc(title(p))}</span>
+          <span class="ell c-title" style="font-weight:500;color:${isIdea(p) ? 'var(--dim)' : 'var(--text)'}">${esc(title(p))}</span>
           <span class="hm" style="font-size:12.5px;color:var(--muted)">${p.format === 'long' ? 'Full' : 'Short'}</span>
           <span class="fx hm" style="gap:4px">${badges(p)}</span>
-          <span>${pill(status(p))}</span></button>`; }).join('')}
+          <span class="c-st">${pill(status(p))}</span></button>`; }).join('')}
     </div>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:20px">
       <div class="fx" style="gap:12px;flex-wrap:wrap"><h1>Posts</h1><div class="f1"></div><input id="search" class="search" placeholder="Search titles and notes" /></div>
       <div class="card" style="overflow:hidden">
-        <div class="pgrid phead cap"><span>Date</span><span class="hm">Channel</span><span>Title</span><span class="hm">Format</span><span class="hm">Platforms</span><span>Status</span></div>
+        <div class="pgrid phead cap desk-only"><span>Date</span><span class="hm">Channel</span><span>Title</span><span class="hm">Format</span><span class="hm">Platforms</span><span>Status</span></div>
         ${groups || '<div style="padding:48px;text-align:center;color:var(--dim)">No posts match these filters.</div>'}
       </div></div>`;
   }
@@ -706,7 +814,7 @@ section{display:flex;flex-direction:column;gap:12px}
           </div>`; }).join('')}
       </div></div>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
-      <div><h1>Settings</h1><p style="margin:6px 0 0;color:var(--muted);font-size:13.5px;text-wrap:pretty">Platforms are what a new post of that format is planned for. Posting days drive <span style="color:var(--text);font-weight:500">Plan 2 weeks</span> — it adds an empty idea slot on each posting day that doesn't already have a post of that format.</p></div>
+      <div><div class="fx" style="gap:10px;justify-content:space-between"><h1>Settings</h1><button class="btn sm mob-only-i" data-act="plan">Plan 2 weeks</button></div><p style="margin:6px 0 0;color:var(--muted);font-size:13.5px;text-wrap:pretty">Platforms are what a new post of that format is planned for. Posting days drive <span style="color:var(--text);font-weight:500">Plan 2 weeks</span> — it adds an empty idea slot on each posting day that doesn't already have a post of that format.</p></div>
       ${chs}
       <div class="card" style="padding:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px"><div style="font-weight:600;font-size:15px">Backup &amp; sync</div>
@@ -726,7 +834,7 @@ section{display:flex;flex-direction:column;gap:12px}
     $('#drawerHost').innerHTML = `<div class="scrim" data-act="d-close"></div>
       <aside class="drawer" role="dialog" aria-label="Edit post">
         <div class="dhead"><span id="dPill"></span><span class="mono" id="dDate" style="font-size:12px;color:var(--dim);white-space:nowrap"></span><div class="f1"></div>
-          <span class="mono" style="font-size:11px;color:var(--dim);padding:2px 6px;border:1px solid var(--bd);border-radius:5px">Esc</span>
+          <span class="mono esc" style="font-size:11px;color:var(--dim);padding:2px 6px;border:1px solid var(--bd);border-radius:5px">Esc</span>
           <button class="x" style="width:30px;height:30px;font-size:18px;color:var(--muted)" data-act="d-close">×</button></div>
         <div class="dbody">
           <input id="dTitle" class="dtitle" placeholder="Untitled idea">
@@ -779,6 +887,8 @@ section{display:flex;flex-direction:column;gap:12px}
       case 'view': ui.view = v; ui.expand = null; saveUI(); render(); window.scrollTo(0, 0); break;
       case 'cf': case 'pf': case 'sf': ui[a] = v; saveUI(); render(); break;
       case 'clear': ui.cf = ui.pf = ui.sf = 'all'; saveUI(); render(); break;
+      case 'ftog': ui.fopen = !ui.fopen; render(); break;
+      case 'sel-day': ui.selDay = b.dataset.d; render(); break;
       case 'theme': ui.theme = ui.theme === 'dark' ? 'light' : 'dark'; saveUI(); render(); break;
       case 'plan': plan(); break;
       case 'new': newPost(); break;
