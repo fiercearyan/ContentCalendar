@@ -5,13 +5,15 @@ One page to track uploads for three channels — **Tech Decoded**, **Secrets of 
 A single `index.html` plus one Vercel function (`api/data.js`) that stores the calendar in Upstash Redis — the same setup as the streaks app — so every device sees the same data. Each device also keeps a local copy, so it keeps working offline and syncs when it's back online.
 
 ## Views
-- **Dashboard** – overview stats, a board with one row per channel covering the last 7 days and the next 14, and per-channel/per-platform posting progress for the last 30 days.
-- **Month** – a month grid you can filter by channel.
-- **All posts** – a searchable list you can filter by channel, status and type.
-- **Settings** – channel names, colours, posting days, default platforms per format, and backup.
+- **Overview** – today's headline, four stats, *Needs attention* (overdue or due today and not scheduled, with one-click Mark scheduled / Mark posted), a 2-week *Runway* with one row per channel, and *Pipeline by channel* (made → scheduled → posted per platform).
+- **Calendar** – month grid; each post shows a dot per platform (green posted, blue scheduled, grey to schedule).
+- **Posts** – searchable list grouped into Overdue, Today, Upcoming and Earlier.
+- **Settings** – channel names, handles, colours, which formats each channel makes, posting days, default platforms, and backup.
+
+Filters for channel, platform (IG / YT Shorts / YT Full / FB) and stage (To schedule / Scheduled / Posted) sit under the header. Click any post to edit it in the side panel; changes save as you type. Press **N** for a new post, **Esc** to close the panel. The half-moon button switches light/dark.
 
 ## How a post works
-Each post has a channel, a type (Short/Reel or Full length), a date and a stage (Idea → Script → Voice/Record → Editing → Ready → Posted). Each platform is marked **Planned** and then **Posted** on its own, so a reel that's up on Instagram but not on YouTube yet shows as partly posted. If a post's date has passed and it isn't up on every planned platform, it's marked overdue in red.
+Each post has a channel, a format (Short/Reel or Full length), a date, and a state per platform: **To schedule → Scheduled → Posted**. A post with no title is an *idea*. If a post's date has passed and it isn't up on every platform it's planned for, it's marked overdue in red.
 
 **Plan next 2 weeks** creates empty "Idea" slots on each channel's posting days (set these in Settings), skipping any day that already has a post of that type.
 

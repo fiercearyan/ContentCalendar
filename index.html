@@ -1,322 +1,242 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Content Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    color-scheme: dark;
-    --bg: #0f1115;
-    --panel: #171a21;
-    --panel-2: #1e222b;
-    --line: #2a2f3a;
-    --text: #e7e9ee;
-    --muted: #8b93a3;
-    --accent: #f5b942;
-    --ok: #34d399;
-    --warn: #f59e0b;
-    --bad: #f87171;
-    --radius: 10px;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
-  button, input, select, textarea { font: inherit; color: inherit; }
-  button { cursor: pointer; }
-  a { color: var(--accent); }
+:root{--bg:#0E0E10;--in:#0F0F11;--panel:#121214;--s1:#131315;--s1b:#151517;--s1h:#17171A;--s2:#18181B;--chip:#1A1A1D;--l3:#1C1C1F;--l2:#1E1E21;--hov:#202024;--line:#222226;--chiph:#232327;--l26:#26262A;--seg:#2A2A2E;--bd:#2C2C30;--bd2:#34332F;--bd3:#3A3936;--bd4:#4A4844;--text:#EDEBE6;--muted:#A29F97;--dim:#6F6C66;--faint:#8C8981;--g:#6EDCA6;--b:#8DC0F8;--r:#F28A8A;--a2:#F5C35E;--hdr:rgba(14,14,16,.88);--wknd:rgba(255,255,255,.012);color-scheme:dark}
+:root[data-theme=light]{--bg:#F6F5F2;--in:#FFFFFF;--panel:#FCFBF9;--s1:#FFFFFF;--s1b:#EFEEEA;--s1h:#FAF9F6;--s2:#F4F3EF;--chip:#F5F4F0;--l3:#EFEDE9;--l2:#EAE8E3;--hov:#EAE8E3;--line:#E5E3DD;--chiph:#ECEAE5;--l26:#E0DED8;--seg:#FFFFFF;--bd:#DAD8D1;--bd2:#CFCCC4;--bd3:#BDB9B0;--bd4:#B8B4AB;--text:#1B1A17;--muted:#5F5C55;--dim:#86827A;--faint:#78746C;--g:#1D8352;--b:#2B67B3;--r:#C23C3B;--a2:#9A6400;--hdr:rgba(246,245,242,.86);--wknd:rgba(0,0,0,.015);color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Geist,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px}
+a{color:#F5B83D;text-decoration:none}
+button,input,textarea,select{font-family:inherit;color:inherit}
+button{cursor:pointer;white-space:nowrap}
+.mono{font-family:'Geist Mono',ui-monospace,monospace}
+::-webkit-scrollbar{height:10px;width:10px}::-webkit-scrollbar-thumb{background:#2A2926;border-radius:10px;border:2px solid var(--bg)}::-webkit-scrollbar-track{background:transparent}
+.cap{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.fx{display:flex;align-items:center}.f1{flex:1;min-width:0}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  header {
-    position: sticky; top: 0; z-index: 10;
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    padding: 12px 20px; background: rgba(15,17,21,.92); backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  header h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
-  header h1 span { color: var(--accent); }
-  nav { display: flex; gap: 4px; background: var(--panel); padding: 4px; border-radius: 8px; border: 1px solid var(--line); }
-  nav button { background: none; border: 0; padding: 6px 12px; border-radius: 6px; color: var(--muted); }
-  nav button.active { background: var(--panel-2); color: var(--text); }
-  .spacer { flex: 1; }
-  .btn { background: var(--panel-2); border: 1px solid var(--line); padding: 7px 12px; border-radius: 8px; }
-  .btn:hover { border-color: #3a4150; }
-  .btn.primary { background: var(--accent); color: #1a1405; border-color: var(--accent); font-weight: 600; }
-  .btn.danger { color: var(--bad); }
-  .btn.small { padding: 4px 9px; font-size: 12px; }
+/* header */
+header{position:sticky;top:0;z-index:30;background:var(--hdr);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.wrap{max-width:1520px;margin:0 auto;padding-left:28px;padding-right:28px}
+.hrow{padding-top:14px;padding-bottom:14px;display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
+.logo{width:28px;height:28px;border-radius:8px;background:#F5B83D;color:#141210;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+.seg{display:flex;gap:2px;padding:3px;background:var(--s1b);border:1px solid var(--line);border-radius:10px}
+.seg button{border:0;padding:7px 14px;border-radius:7px;font-size:13.5px;font-weight:500;background:transparent;color:var(--muted)}
+.seg button.on{background:var(--seg);color:var(--text)}
+.seg.sm{padding:2px;border-radius:8px}
+.seg.sm button{height:24px;padding:0 10px;border-radius:6px;font-size:12.5px;display:flex;align-items:center;gap:6px}
+.btn{height:36px;padding:0 14px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);font-size:13.5px;font-weight:500}
+.btn:hover{background:var(--hov)}
+.btn.sm{height:32px;font-size:13px;padding:0 12px;border-radius:8px}
+.btn.primary{border:0;background:#F5B83D;color:#141210;font-weight:600;display:flex;align-items:center;gap:10px;padding:0 10px 0 14px}
+.btn.primary:hover{background:#FFC85A}
+.kbd{font-family:'Geist Mono',monospace;font-size:11px;padding:2px 6px;border-radius:5px;background:rgba(20,18,16,.14)}
+.iconbtn{width:36px;height:36px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);display:grid;place-items:center;padding:0}
+.iconbtn:hover{background:var(--hov)}
+.themei{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--text);background:linear-gradient(90deg,var(--text) 50%,transparent 50%)}
+.syncdot{width:7px;height:7px;border-radius:50%;margin-right:4px;background:#5BD69A;box-shadow:0 0 0 3px rgba(91,214,154,.15)}
+.syncdot.saving{background:#F5B83D;box-shadow:0 0 0 3px rgba(245,184,61,.18)}
+.syncdot.bad{background:#F26B6B;box-shadow:0 0 0 3px rgba(242,107,107,.18)}
+.syncdot.local{background:var(--bd4);box-shadow:none}
+.frow{padding-bottom:12px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.chf{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:7px;font-size:12.5px;font-weight:500;border:1px solid transparent;background:transparent;color:var(--muted)}
+.chf.on{background:var(--line);color:var(--text);border-color:var(--bd2)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
+.vsep{width:1px;height:18px;background:var(--l26)}
+.linkbtn{border:0;background:transparent;color:#F5B83D;font-size:12.5px;padding:0}
 
-  main { padding: 20px; max-width: 1500px; margin: 0 auto; }
-  .view { display: none; }
-  .view.active { display: block; }
-  h2 { font-size: 15px; margin: 26px 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
-  h2:first-child { margin-top: 0; }
+main{padding-top:28px;padding-bottom:80px}
+h1{margin:0;font-size:26px;font-weight:600;letter-spacing:-.02em}
+h2{margin:0;font-size:16px;font-weight:600}
+.sub{font-size:13px;color:var(--dim)}
+section{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:14px}
 
-  /* stats */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
-  .stat .n { font-size: 26px; font-weight: 700; }
-  .stat .l { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .stat.bad .n { color: var(--bad); }
-  .stat.ok .n { color: var(--ok); }
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
+.kpi{white-space:normal;text-align:left;border:1px solid var(--line);border-radius:14px;background:var(--s1);padding:18px 20px;display:flex;flex-direction:column;gap:4px}
+.kpi:hover{background:var(--s1h)}
+.kpi .v{font-size:32px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:4px}
+.kpi .l{font-size:12.5px;color:var(--muted)}.kpi .s{font-size:12.5px;color:var(--dim)}
+.kbar{height:4px;border-radius:2px;background:var(--l26);margin-top:8px;overflow:hidden}.kbar i{display:block;height:100%}
 
-  /* channel cards */
-  .channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
-  .ccard { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; border-top: 3px solid var(--c); }
-  .ccard h3 { margin: 0 0 2px; font-size: 15px; }
-  .ccard .handles { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
-  .ccard table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .ccard td { padding: 4px 0; border-top: 1px solid var(--line); }
-  .ccard td.r { text-align: right; color: var(--muted); }
-  .ccard .fmt-h { margin: 12px 0 6px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
-  .ccard .fmt-h b { color: var(--text); }
-  .buckets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-  .bk { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; text-align: left; font-size: 11px; color: var(--muted); }
-  .bk b { display: block; font-size: 18px; }
-  .bk.todo b { color: var(--warn); } .bk.sch b { color: #60a5fa; } .bk.ok b { color: var(--ok); }
-  .bk:hover { border-color: #444b5a; }
-  .prow2 { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 12px; margin: 6px 0; }
-  .prow2 .r { color: var(--muted); }
-  .prow2 .g { color: var(--ok); } .prow2 .b { color: #60a5fa; } .prow2 .m { color: var(--warn); } .prow2 .of { color: var(--muted); }
-  .sbar { grid-column: 1 / -1; display: flex; height: 5px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
-  .sbar .g { background: var(--ok); } .sbar .b { background: #60a5fa; }
-  .inprod { margin-top: 8px; font-size: 12px; color: var(--muted); }
-  .ccard .next { margin-top: 10px; font-size: 12px; color: var(--muted); }
-  .ccard .next b { color: var(--text); font-weight: 500; }
-  .bar { height: 6px; background: var(--panel-2); border-radius: 4px; overflow: hidden; margin-top: 4px; }
-  .bar i { display: block; height: 100%; background: var(--c); }
+/* badges */
+.bdg{font-family:'Geist Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 6px;border-radius:5px;line-height:1;border:1px solid}
+.bdg.sm{font-size:9.5px;padding:2px 4px;border-radius:4px}
+.bdg.posted{background:rgba(91,214,154,.14);color:var(--g);border-color:rgba(91,214,154,.28)}
+.bdg.scheduled{background:rgba(120,180,246,.14);color:var(--b);border-color:rgba(120,180,246,.3)}
+.bdg.none{background:transparent;color:var(--faint);border-color:var(--bd2)}
+.pill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px}
+.pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
 
-  /* board */
-  .board-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
-  .board { display: grid; min-width: 1200px; }
-  .board .cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 6px; min-height: 74px; }
-  .board .head { min-height: 0; text-align: center; font-size: 12px; color: var(--muted); padding: 8px 4px; background: var(--panel-2); }
-  .board .head b { display: block; color: var(--text); font-size: 15px; }
-  .board .head.today { background: #3a2f12; color: var(--accent); }
-  .board .head.today b { color: var(--accent); }
-  .board .lane { position: sticky; left: 0; z-index: 2; background: var(--panel-2); font-weight: 600; font-size: 13px; display: flex; align-items: center; border-left: 3px solid var(--c); }
-  .board .cell.past { background: rgba(255,255,255,.012); }
-  .board .cell.todaycol { background: rgba(245,185,66,.06); }
-  .board .cell.add:hover { background: rgba(255,255,255,.03); }
-  .board .plus { opacity: 0; color: var(--muted); font-size: 12px; border: 0; background: none; width: 100%; padding: 2px; }
-  .board .cell:hover .plus { opacity: 1; }
+/* attention */
+.att{display:grid;grid-template-columns:72px minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:11px 16px;border-bottom:1px solid var(--l2)}
+.att:last-child{border-bottom:0}
+.att .open{border:0;background:transparent;text-align:left;padding:0;display:flex;align-items:center;gap:10px;min-width:0}
+.mini{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--bd);background:transparent;font-size:12.5px}
+.mini.b{color:var(--b)}.mini.b:hover{background:rgba(120,180,246,.1)}
+.mini.g{color:var(--g)}.mini.g:hover{background:rgba(91,214,154,.1)}
 
-  /* chips */
-  .chip {
-    display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-left: 3px solid var(--c);
-    background: var(--panel-2); border-radius: 6px; padding: 4px 6px; margin-bottom: 4px; font-size: 12px; line-height: 1.3;
-  }
-  .chip:hover { border-color: #444b5a; border-left-color: var(--c); }
-  .chip .t { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chip .m { display: flex; gap: 4px; margin-top: 3px; align-items: center; flex-wrap: wrap; }
-  .chip.done { opacity: .62; }
-  .chip.done .t { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.35); }
-  .chip.overdue { border-color: rgba(248,113,113,.55); border-left-color: var(--bad); }
-  .pf { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: #2b303b; color: var(--muted); }
-  .pf.on { background: rgba(52,211,153,.18); color: var(--ok); }
-  .pf.sch { background: rgba(96,165,250,.18); color: #60a5fa; }
-  .fmt { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-  .stage { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #262b35; color: #b9c0cd; }
+/* runway */
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap}
+.legend>span{display:flex;gap:6px;align-items:center}
+.tl{border:1px solid var(--line);border-radius:14px;overflow-x:auto;background:var(--panel)}
+.tlg{display:grid}
+.tlh{border-bottom:1px solid var(--line)}
+.tlh>div{padding:10px 8px;border-left:1px solid var(--l2);display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.tlh>div:first-child{padding:12px 16px;border-left:0;justify-content:flex-end}
+.tlh .dw{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+.tlh .dn{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;padding:1px 6px;margin-left:-6px;border-radius:6px}
+.tlh .past .dn{color:var(--dim)}
+.tlh .today .dw{color:#F5B83D}.tlh .today .dn{background:#F5B83D;color:#141210}
+.tlr{border-bottom:1px solid var(--l2)}.tlr:last-child{border-bottom:0}
+.tlr>.lane{padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tlc{border-left:1px solid var(--l2);padding:6px;display:flex;flex-direction:column;gap:6px;min-height:104px}
+.tlc.today{background:rgba(245,184,61,.05)}.tlc.wknd{background:var(--wknd)}
+.chip{text-align:left;padding:7px 8px;border-radius:8px;background:var(--chip);border:1px solid var(--l26);display:flex;flex-direction:column;gap:6px;white-space:normal}
+.chip:hover{background:var(--chiph)}
+.chip.idea{background:transparent;border-style:dashed;border-color:var(--bd2)}
+.chip.od{border-color:rgba(242,107,107,.55)}
+.chip .t{font-size:12px;line-height:1.35;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;max-height:2.7em}
+.chip.idea .t{color:var(--dim)}
+.chip .m{display:flex;gap:3px;flex-wrap:wrap;align-items:center}
+.chip .fm{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.addcell{flex:1;min-height:22px;border:1px dashed transparent;border-radius:7px;background:transparent;color:transparent;font-size:16px}
+.addcell:hover{border-color:var(--bd2);color:var(--dim)}
 
-  /* month */
-  .month-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .month-head h3 { margin: 0; font-size: 18px; min-width: 180px; }
-  .month { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
-  .month .dow { padding: 8px; font-size: 12px; color: var(--muted); background: var(--panel-2); border-bottom: 1px solid var(--line); text-align: center; }
-  .month .day { min-height: 118px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 6px; }
-  .month .day:nth-child(7n) { border-right: 0; }
-  .month .day.other { background: rgba(0,0,0,.18); }
-  .month .day.other .num { color: #4a5160; }
-  .month .num { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  .month .day.today .num b { background: var(--accent); color: #1a1405; border-radius: 10px; padding: 0 6px; }
-  .month .num button { opacity: 0; border: 0; background: none; color: var(--muted); padding: 0 4px; }
-  .month .day:hover .num button { opacity: 1; }
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.pcard{padding:20px;display:flex;flex-direction:column;gap:16px}
+.pfmt{display:flex;flex-direction:column;gap:12px;padding-top:16px;border-top:1px solid var(--line)}
+.pfmt .h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.pnums{display:flex;gap:12px;font-size:12px}
+.pnums button{border:0;background:transparent;padding:0;font:inherit;font-family:'Geist Mono',monospace}
+.pnums button:hover{text-decoration:underline}
+.prow{display:flex;flex-direction:column;gap:6px}
+.pbar{display:flex;gap:2px;height:6px;border-radius:3px;overflow:hidden;background:var(--line)}
+.next{text-align:left;border:1px solid var(--line);background:var(--s2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.next:hover{border-color:var(--bd2)}
 
-  /* list */
-  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .filters select, .filters input { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
-  table.list { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-  table.list th, table.list td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 13px; vertical-align: middle; }
-  table.list th { color: var(--muted); font-weight: 600; background: var(--panel-2); font-size: 12px; }
-  table.list tr:hover td { background: rgba(255,255,255,.02); cursor: pointer; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 6px; }
-  .empty { color: var(--muted); text-align: center; padding: 30px; }
+/* month */
+.mgrid{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.mrow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid var(--l2)}
+.mrow:last-child{border-bottom:0}
+.mrow.h{border-bottom:1px solid var(--line)}
+.mrow.h>div{padding:10px 12px}
+.mday{min-height:132px;padding:8px;border-right:1px solid var(--l2);display:flex;flex-direction:column;gap:4px;min-width:0}
+.mday:last-child{border-right:0}
+.mday.out{background:var(--bg)}.mday.today{background:rgba(245,184,61,.05)}
+.mnum{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;padding:2px 7px;border-radius:6px}
+.mday.past .mnum{color:var(--dim)}.mday.out .mnum{color:var(--bd3)}.mday.today .mnum{background:#F5B83D;color:#141210}
+.madd{width:22px;height:22px;border-radius:6px;border:0;background:transparent;color:var(--bd4);font-size:15px;line-height:1}
+.madd:hover{background:var(--line);color:var(--text)}
+.mchip{display:flex;align-items:center;gap:6px;width:100%;min-width:0;padding:5px 7px;border-radius:6px;background:var(--chip);border:1px solid var(--l26);text-align:left;font-size:12px}
+.mchip:hover{background:var(--chiph)}
+.mchip.idea{background:transparent;border-style:dashed;border-color:var(--bd2)}.mchip.idea .ell{color:var(--dim)}
+.mchip.od{border-color:rgba(242,107,107,.55)}
+.pdot{width:5px;height:5px;border-radius:50%;display:inline-block}
+.pdot.posted{background:#5BD69A}.pdot.scheduled{background:#78B4F6}.pdot.none{background:var(--bd4)}
+.more{border:0;background:transparent;text-align:left;padding:2px 7px;font-size:12px;color:var(--muted)}
 
-  /* modal */
-  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: flex-start; justify-content: center; z-index: 50; padding: 40px 16px; overflow-y: auto; }
-  .backdrop.open { display: flex; }
-  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: 100%; max-width: 560px; padding: 20px; }
-  .modal h3 { margin: 0 0 14px; font-size: 16px; }
-  .field { margin-bottom: 12px; }
-  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  .field input[type=text], .field input[type=date], .field input[type=time], .field input[type=url], .field select, .field textarea {
-    width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
-  }
-  .field textarea { min-height: 70px; resize: vertical; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-  .pgrid { display: grid; gap: 6px; }
-  .pseg button.on.todo { border-color: var(--muted); color: var(--text); }
-  .pseg button.on.scheduled { border-color: #60a5fa; color: #60a5fa; }
-  .pseg button.on.posted { border-color: var(--ok); color: var(--ok); }
-  .pseg button:disabled { opacity: .4; cursor: default; }
-  .prow { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  .prow.off { opacity: .5; }
-  .prow label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); margin: 0; }
-  .modal .actions { display: flex; gap: 8px; margin-top: 16px; }
-  .seg { display: flex; gap: 4px; flex-wrap: wrap; }
-  .seg button { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font-size: 12px; color: var(--muted); }
-  .seg button.on { border-color: var(--accent); color: var(--accent); }
+/* posts */
+.pgrid{display:grid;grid-template-columns:110px 170px minmax(0,1fr) 70px 130px 120px;gap:16px;align-items:center}
+.phead{padding:10px 16px;border-bottom:1px solid var(--line)}
+.prowb{width:100%;text-align:left;border:0;border-top:1px solid var(--l3);background:transparent;padding:11px 16px;font-size:13.5px}
+.prowb:hover{background:var(--s2)}
+.ghead{display:flex;align-items:center;gap:8px;padding:14px 16px 8px;font-size:12px;font-weight:600}
+.search{width:320px;max-width:100%;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--bd);background:var(--s1b);font-size:13.5px;outline:none}
 
-  /* settings */
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
-  .card h3 { margin: 0 0 10px; font-size: 15px; }
-  .card p { color: var(--muted); margin: 0 0 10px; }
-  .days { display: flex; gap: 4px; }
-  .days button { width: 34px; padding: 5px 0; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); font-size: 12px; }
-  .days button.on { background: var(--c); color: #0b0d10; border-color: var(--c); font-weight: 700; }
-  .cad { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: center; margin: 6px 0; font-size: 13px; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--line); padding: 10px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 60; }
-  .toast.show { opacity: 1; }
-  .filterbar { flex-basis: 100%; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .slider { position: relative; display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
-  .slider button { position: relative; z-index: 1; background: none; border: 0; padding: 5px 14px; border-radius: 999px; color: var(--muted); font-size: 13px; transition: color .2s; white-space: nowrap; }
-  .slider button.on { color: #1a1405; font-weight: 600; }
-  .slider .knob { position: absolute; top: 3px; bottom: 3px; left: 0; border-radius: 999px; background: var(--accent); transition: transform .25s cubic-bezier(.3,.7,.2,1), width .25s cubic-bezier(.3,.7,.2,1); }
-  .fcount { font-size: 12px; color: var(--muted); }
-  .sync { font-size: 12px; color: var(--muted); }
-  .sync.ok { color: var(--ok); }
-  .sync.bad { color: var(--bad); }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+/* settings */
+.sinput{height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--bd);background:var(--in);color:var(--text);font-size:14px;outline:none;width:100%}
+.slabel{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--dim)}
+.sw{width:24px;height:24px;border-radius:7px;border:2px solid transparent;padding:0}
+.sw.on{border-color:var(--text)}
+.sfmt{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;padding:12px 0;border-bottom:1px solid var(--l3)}
+.tog{width:34px;height:20px;border-radius:10px;border:0;padding:2px;background:var(--bd2);display:flex;justify-content:flex-start}
+.tog.on{background:#F5B83D;justify-content:flex-end}
+.tog span{width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.opt{height:28px;border-radius:7px;font-size:12px;font-weight:500;border:1px solid var(--bd);background:transparent;color:var(--dim)}
+.opt.on{background:rgba(245,184,61,.14);color:var(--a2);border-color:rgba(245,184,61,.4)}
+.opt.day{width:32px}.opt.pl{padding:0 10px;font-family:'Geist Mono',monospace;font-size:11.5px}
 
-  @media (max-width: 700px) {
-    main { padding: 12px; }
-    .month .day { min-height: 80px; }
-    .month .chip .m { display: none; }
-    .row, .row3 { grid-template-columns: 1fr; }
-  }
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(5,5,6,.55);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--s1);border-left:1px solid var(--l26);z-index:41;display:flex;flex-direction:column;box-shadow:-24px 0 60px rgba(0,0,0,.4)}
+.dhead{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dbody{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:22px}
+.dfoot{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
+.dtitle{width:100%;border:0;border-bottom:1px solid var(--l26);background:transparent;font-size:22px;font-weight:600;letter-spacing:-.02em;outline:none;padding:0 0 12px}
+.dfield{display:flex;flex-direction:column;gap:8px}
+.chopt{display:flex;align-items:center;gap:7px;height:32px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid var(--bd);background:transparent;color:var(--muted)}
+.chopt.on{background:var(--line);color:var(--text);border-color:var(--bd3)}
+.dinput{height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--bd);background:var(--in);color:var(--text);font-size:13.5px;outline:none}
+.iseg{display:flex;gap:2px;padding:2px;background:var(--in);border:1px solid var(--bd);border-radius:8px}
+.iseg button{flex:1;border:0;border-radius:6px;font-size:13px;font-weight:500;background:transparent;color:var(--dim)}
+.iseg button.on{background:var(--seg);color:var(--text)}
+.iseg button.on.scheduled{background:rgba(120,180,246,.14);color:var(--b)}
+.iseg button.on.posted{background:rgba(91,214,154,.14);color:var(--g)}
+.platrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--l3);min-height:52px}
+.platrow:last-child{border-bottom:0}
+.x{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:var(--dim);font-size:15px}
+.x:hover{background:var(--line);color:var(--text)}
+.addp{border:1px dashed var(--bd2);background:transparent;border-radius:7px;height:28px;padding:0 10px;font-size:12.5px;color:var(--muted)}
+.addp:hover{color:var(--text);border-color:var(--bd4)}
+.dtext{width:100%;resize:vertical;padding:10px 12px;border-radius:9px;border:1px solid var(--bd);background:var(--in);color:var(--text);font-size:13.5px;line-height:1.5;outline:none}
+.danger{height:36px;padding:0 12px;border-radius:9px;border:0;background:transparent;color:var(--r);font-size:13px}
+.danger:hover{background:rgba(242,107,107,.1)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:500;box-shadow:0 12px 40px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.lock{position:fixed;inset:0;z-index:70;background:var(--bg);display:none;place-items:center;padding:20px}
+.lock.open{display:grid}
+.lock form{width:min(380px,100%);padding:28px;display:flex;flex-direction:column;gap:14px}
+
+@media (max-width:760px){
+  header{position:static}
+  .wrap{padding-left:14px;padding-right:14px}
+  .pgrid{grid-template-columns:90px minmax(0,1fr) 110px}
+  .pgrid>.hm{display:none}
+  .att{grid-template-columns:60px minmax(0,1fr)}
+  .att>.bd,.att>.ac{grid-column:2}
+  .mday{min-height:84px;padding:4px}.mchip .ell,.mchip .pds{display:none}
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>Content <span>Calendar</span></h1>
-  <nav id="tabs">
-    <button data-view="dashboard" class="active">Dashboard</button>
-    <button data-view="calendar">Month</button>
-    <button data-view="list">All posts</button>
-    <button data-view="settings">Settings</button>
-  </nav>
-  <div class="spacer"></div>
-  <span class="sync" id="sync"></span>
-  <button class="btn" id="planBtn" title="Create placeholder slots for the next 14 days from each channel's posting days">Plan next 2 weeks</button>
-  <button class="btn primary" id="newBtn">+ New post</button>
-  <div class="filterbar" id="filterbar">
-    <div class="slider" data-key="pf" role="radiogroup" aria-label="Platform">
-      <span class="knob"></span>
-      <button data-v="ig">IG</button><button data-v="yts">YT Shorts</button><button data-v="ytf">YT Full</button><button data-v="fb">FB</button><button data-v="all">All</button>
+  <div class="wrap hrow">
+    <div class="fx" style="gap:10px;flex:none">
+      <div class="logo">CC</div>
+      <div style="font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap">Content Calendar</div>
     </div>
-    <div class="slider" data-key="st" role="radiogroup" aria-label="Status">
-      <span class="knob"></span>
-      <button data-v="todo">Not scheduled</button><button data-v="scheduled">Scheduled</button><button data-v="posted">Posted</button><button data-v="all">All</button>
+    <nav class="seg" id="nav"></nav>
+    <div class="f1"></div>
+    <div class="fx" style="gap:10px;flex:none">
+      <span class="syncdot" id="sync" title="Saved"></span>
+      <button class="iconbtn" data-act="theme" id="themeBtn" title="Switch theme"><span class="themei"></span></button>
+      <button class="btn" data-act="plan" title="Add idea slots on posting days for the next 2 weeks">Plan 2 weeks</button>
+      <button class="btn primary" data-act="new">New post <span class="kbd">N</span></button>
     </div>
-    <span class="fcount" id="fcount"></span>
   </div>
+  <div class="wrap frow" id="filters"></div>
 </header>
 
-<main>
-  <!-- DASHBOARD -->
-  <section class="view active" id="view-dashboard">
-    <h2>Overview</h2>
-    <div class="stats" id="stats"></div>
-
-    <h2>Last week → next two weeks</h2>
-    <div class="board-wrap"><div class="board" id="board"></div></div>
-    <div class="legend">
-      <span><span class="pf on">IG</span> posted</span>
-      <span><span class="pf sch">IG</span> scheduled</span>
-      <span><span class="pf">IG</span> not scheduled yet</span>
-      <span>Red border = date passed, not fully posted</span>
-      <span>Hover a cell → + to add</span>
-    </div>
-
-    <h2>Channels · made → scheduled → posted</h2>
-    <div class="legend" style="margin:-4px 0 10px"><span>Per platform: <span style="color:var(--ok)">posted</span> · <span style="color:#60a5fa">scheduled</span> · <span style="color:var(--warn)">not scheduled</span>. Tap a box to see those videos.</span></div>
-    <div class="channels" id="channelCards"></div>
-  </section>
-
-  <!-- MONTH -->
-  <section class="view" id="view-calendar">
-    <div class="month-head">
-      <button class="btn" id="prevM">‹</button>
-      <h3 id="monthTitle"></h3>
-      <button class="btn" id="nextM">›</button>
-      <button class="btn small" id="todayM">Today</button>
-      <div class="spacer"></div>
-      <select id="monthFilter" class="btn"></select>
-    </div>
-    <div class="month" id="month"></div>
-  </section>
-
-  <!-- LIST -->
-  <section class="view" id="view-list">
-    <div class="filters">
-      <input type="text" id="fText" placeholder="Search title / notes" />
-      <select id="fChannel"></select>
-      <span id="fFmtNote" style="display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px"></span>
-    </div>
-    <table class="list">
-      <thead><tr><th>Date</th><th>Channel</th><th>Title</th><th>Type</th><th>Stage</th><th>Platforms</th></tr></thead>
-      <tbody id="listBody"></tbody>
-    </table>
-  </section>
-
-  <!-- SETTINGS -->
-  <section class="view" id="view-settings">
-    <div id="settingsChannels"></div>
-    <div class="card">
-      <h3>Backup &amp; sync</h3>
-      <p>Your data is saved in this browser. Export a backup now and then, or to move your calendar to another device (export here, import there).</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="exportBtn">Export JSON</button>
-        <label class="btn">Import JSON<input type="file" id="importFile" accept="application/json" hidden /></label>
-        <button class="btn danger" id="resetBtn">Delete all posts</button>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- EDITOR -->
-<div class="backdrop" id="backdrop">
-  <div class="modal">
-    <h3 id="mTitle">New post</h3>
-    <div class="field"><label>Title / topic</label><input type="text" id="eTitle" placeholder="e.g. AI Shovel #12, Ramayan part 3…" /></div>
-    <div class="row">
-      <div class="field"><label>Channel</label><select id="eChannel"></select></div>
-      <div class="field"><label>Type</label><select id="eFormat"></select></div>
-    </div>
-    <div class="row">
-      <div class="field"><label>Publish date</label><input type="date" id="eDate" /></div>
-      <div class="field"><label>Time (optional)</label><input type="time" id="eTime" /></div>
-    </div>
-    <div class="field"><label>Stage</label><div class="seg" id="eStage"></div></div>
-    <div class="field"><label>Platforms</label><div class="pgrid" id="ePlatforms"></div></div>
-    <div class="field"><label>Link (optional)</label><input type="url" id="eLink" placeholder="https://…" /></div>
-    <div class="field"><label>Notes</label><textarea id="eNotes" placeholder="Hook, script link, music, thumbnail idea…"></textarea></div>
-    <div class="actions">
-      <button class="btn danger" id="eDelete">Delete</button>
-      <button class="btn" id="eDup">Duplicate</button>
-      <div class="spacer"></div>
-      <button class="btn" id="eCancel">Cancel</button>
-      <button class="btn primary" id="eSave">Save</button>
-    </div>
-  </div>
-</div>
+<main class="wrap" id="main"></main>
+<div id="drawerHost"></div>
 <div class="toast" id="toast"></div>
-<div class="backdrop" id="lock">
-  <form class="modal" id="lockForm" style="max-width:380px;margin-top:12vh">
-    <h3>Content Calendar</h3>
-    <p style="color:var(--muted);margin:0 0 12px">Enter the passcode to load and sync your calendar. You only need to do this once per device.</p>
-    <div class="field"><input type="password" id="lockIn" placeholder="Passcode" autocomplete="current-password" style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px" /></div>
-    <div id="lockErr" style="color:var(--bad);font-size:12px;min-height:16px;margin-bottom:8px"></div>
-    <button class="btn primary" style="width:100%">Unlock</button>
+
+<div class="lock" id="lock">
+  <form class="card" id="lockForm">
+    <div class="fx" style="gap:10px"><div class="logo">CC</div><div style="font-weight:600;font-size:15px">Content Calendar</div></div>
+    <div style="font-size:13.5px;color:var(--muted)">Enter the passcode to load and sync your calendar. You only need to do this once per device.</div>
+    <input type="password" id="lockIn" class="sinput" placeholder="Passcode" autocomplete="current-password" />
+    <div id="lockErr" style="color:var(--r);font-size:12.5px;min-height:16px"></div>
+    <button class="btn primary" style="justify-content:center;padding:0 14px">Unlock</button>
   </form>
 </div>
 
@@ -324,55 +244,61 @@
 (() => {
   'use strict';
 
-  // ---------- constants ----------
+  // ================= constants =================
   const KEY = 'contentCalendar.v1';
-  const PLATFORMS = {
-    ig: { label: 'Instagram', short: 'IG' },
-    yt: { label: 'YouTube', short: 'YT' },
-    fb: { label: 'Facebook', short: 'FB' },
-  };
-  const FORMATS = { short: 'Short / Reel', long: 'Full length' };
-  const STAGES = ['Idea', 'Script', 'Voice/Record', 'Editing', 'Ready', 'Posted'];
-  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const UIK = 'contentCalendar.ui';
+  const PL = ['ig', 'yt', 'fb'];
+  const PLN = { ig: 'IG', yt: 'YT', fb: 'FB' };
+  const PLF = { ig: 'Instagram', yt: 'YouTube', fb: 'Facebook' };
+  const FMTS = ['short', 'long'];
+  const FL = { short: { ig: 'Instagram · Reels', yt: 'YouTube · Shorts', fb: 'Facebook · Reels' }, long: { ig: 'Instagram · Video', yt: 'YouTube · Full length', fb: 'Facebook · Video' } };
+  const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const SW = ['#4CC2F0', '#F59A4A', '#A98BFA', '#5BD69A', '#F07A9A', '#E8C547'];
+  const OLD_COLORS = { '#38bdf8': '#4CC2F0', '#fb923c': '#F59A4A', '#a78bfa': '#A98BFA' };
 
   const DEFAULT_CHANNELS = [
-    {
-      id: 'td', name: 'Tech Decoded', color: '#38bdf8', handles: 'IG @techdecoded49 · YouTube',
-      formats: { short: { platforms: ['ig', 'yt'], days: [] } }, m1: true, m2: true,
-    },
-    {
-      id: 'sos', name: 'Secrets of Sanatan', color: '#fb923c', handles: 'IG @mewwwssss · YouTube',
-      formats: { short: { platforms: ['yt'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true, m2: true,
-    },
-    {
-      id: 'ttr', name: 'The Thinking Room', color: '#a78bfa', handles: 'IG @thethinkingroom.in · YouTube · Facebook',
-      formats: { short: { platforms: ['ig', 'yt', 'fb'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true, m2: true,
-    },
+    { id: 'td', name: 'Tech Decoded', color: '#4CC2F0', handles: 'IG @techdecoded49 · YouTube',
+      formats: { short: { platforms: ['ig', 'yt'], days: [] } }, m1: true, m2: true, m3: true },
+    { id: 'sos', name: 'Secrets of Sanatan', color: '#F59A4A', handles: 'IG @mewwwssss · YouTube',
+      formats: { short: { platforms: ['yt'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true, m2: true, m3: true },
+    { id: 'ttr', name: 'The Thinking Room', color: '#A98BFA', handles: 'IG @thethinkingroom.in · YouTube · Facebook',
+      formats: { short: { platforms: ['ig', 'yt', 'fb'], days: [] }, long: { platforms: ['yt'], days: [] } }, m1: true, m2: true, m3: true },
   ];
 
-  // ---------- state ----------
+  // ================= dates (local YYYY-MM-DD, no timezone drift) =================
+  const pad = n => String(n).padStart(2, '0');
+  const ds = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const add = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ds(d); };
+  const dowi = s => (pd(s).getDay() + 6) % 7;            // Monday = 0
+  const nice = s => { const d = pd(s); return `${DOW[dowi(s)]} ${d.getDate()} ${MON[d.getMonth()].slice(0, 3)}`; };
+  let TODAY = ds(new Date());
+
+  // ================= data =================
   let state = load();
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} // keep any one-time settings update
-  let editingId = null;
-  let draft = null;
-  let monthCursor = firstOfMonth(new Date());
-  let listFormat = '';
+  const ui = loadUI();
 
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (s && Array.isArray(s.items) && Array.isArray(s.channels)) return fixState(s);
-      }
-    } catch (e) { /* storage unavailable or corrupt */ }
+      if (raw) { const s = JSON.parse(raw); if (s && Array.isArray(s.items) && Array.isArray(s.channels)) return fixState(s); }
+    } catch (e) {}
     return fixState({ version: 1, channels: structuredClone(DEFAULT_CHANNELS), channelsAt: 0, items: [] });
   }
+  function loadUI() {
+    const d = { view: 'dash', cf: 'all', pf: 'all', sf: 'all', month: TODAY.slice(0, 7), q: '', openId: null, expand: null, theme: 'dark' };
+    try { const s = JSON.parse(localStorage.getItem(UIK) || '{}'); ['view', 'cf', 'pf', 'sf', 'theme'].forEach(k => { if (s[k]) d[k] = s[k]; }); } catch (e) {}
+    return d;
+  }
+  function saveUI() { try { localStorage.setItem(UIK, JSON.stringify({ view: ui.view, cf: ui.cf, pf: ui.pf, sf: ui.sf, theme: ui.theme })); } catch (e) {} }
+
   function fixState(s) {
     if (!Array.isArray(s.channels) || !s.channels.length) {
       s.channels = structuredClone(DEFAULT_CHANNELS);
       // existing posts: let the one-time updates below run on them; a brand-new device keeps the flags so it can't override synced settings
-      if ((s.items || []).length) s.channels.forEach(c => { delete c.m1; delete c.m2; });
+      if ((s.items || []).length) s.channels.forEach(c => { delete c.m1; delete c.m2; delete c.m3; });
     }
     s.deleted = s.deleted || {};
     const now = Date.now();
@@ -388,7 +314,7 @@
     s.channels.forEach(c => {
       if (c.m1) return;
       if (c.id === 'ttr') {
-        // The Thinking Room cross-posts every reel to IG, YouTube and Facebook: make FB a default and plan all three on every reel
+        // The Thinking Room cross-posts every reel to IG, YouTube and Facebook
         const sf = c.formats.short; if (sf && !sf.platforms.includes('fb')) sf.platforms.push('fb');
         if (c.handles === 'Instagram · YouTube') c.handles = 'IG @thethinkingroom.in · YouTube · Facebook';
         (s.items || []).forEach(i => {
@@ -403,16 +329,23 @@
       }
       c.m1 = true; s.channelsAt = now;
     });
+    s.channels.forEach(c => {
+      if (c.m3) return;
+      // new design palette
+      if (OLD_COLORS[(c.color || '').toLowerCase()]) c.color = OLD_COLORS[c.color.toLowerCase()];
+      c.m3 = true; s.channelsAt = now;
+    });
     s.channelsAt = s.channelsAt || 0;
-    s.items.forEach(i => { i.updatedAt = i.updatedAt || 1; });
+    s.items.forEach(i => {
+      i.updatedAt = i.updatedAt || 1;
+      i.title = i.title || '';
+      PL.forEach(p => { i.platforms[p] = i.platforms[p] || { planned: false, scheduled: false, posted: false }; });
+    });
     return s;
   }
-  function persist() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); }
-    catch (e) { toast('Could not save in this browser — export a backup'); }
-  }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { toast('Could not save in this browser — export a backup'); } }
   function save() { persist(); schedulePush(); }
-  const touch = it => { it.updatedAt = Date.now(); return it; };
+  const touch = it => { it.updatedAt = Date.now(); it.stage = overall(it) === 'posted' ? 'Posted' : ((it.title || '').trim() ? 'Ready' : 'Idea'); return it; };
   const tombstone = id => { state.deleted[id] = Date.now(); };
 
   // Merge two states post-by-post (newest edit wins). Keep in step with merge() in api/data.js.
@@ -433,12 +366,12 @@
     return { version: 1, channels: bNewer ? b.channels : a.channels, channelsAt: Math.max(a.channelsAt || 0, b.channelsAt || 0), items, deleted };
   }
 
-  // ---------- cloud sync (Vercel function + Upstash Redis, same as streaks) ----------
+  // ================= cloud sync (Vercel function + Upstash Redis) =================
   const PASSK = 'contentCalendar.pass';
   const online = location.protocol !== 'file:';
   let pass = (() => { try { return localStorage.getItem(PASSK) || ''; } catch (e) { return ''; } })();
   let pushT, syncing = false, dirty = false;
-  function setSync(text, cls = '') { const el = document.getElementById('sync'); if (el) { el.textContent = text; el.className = 'sync ' + cls; } }
+  function setSync(cls, tip) { const el = document.getElementById('sync'); el.className = 'syncdot ' + cls; el.title = tip; }
   async function api(method, body) {
     const r = await fetch('/api/data', { method, headers: { 'x-passcode': pass, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     const j = await r.json().catch(() => ({}));
@@ -447,7 +380,7 @@
   }
   function schedulePush() {
     if (!online || !pass) return;
-    dirty = true; setSync('Saving…');
+    dirty = true; setSync('saving', 'Saving…');
     clearTimeout(pushT); pushT = setTimeout(push, 700);
   }
   async function push() {
@@ -456,29 +389,14 @@
     syncing = true; dirty = false;
     try {
       const j = await api('PUT', state);
-      state = fixState(merge(state, j.state)); persist(); rerender();
-      setSync('Synced', 'ok');
+      state = fixState(merge(state, j.state)); persist(); softRender();
+      setSync('', 'All changes synced');
     } catch (e) {
       dirty = true;
       if (e.code === 401) return lockOut('Passcode changed. Enter the new one.');
-      setSync('Offline · retrying', 'bad'); clearTimeout(pushT); pushT = setTimeout(push, 15000);
+      setSync('bad', 'Offline — will retry'); clearTimeout(pushT); pushT = setTimeout(push, 15000);
     } finally { syncing = false; }
   }
-  async function pull() {
-    if (!online || !pass || syncing) return;
-    try {
-      const j = await api('GET');
-      const server = j.state;
-      const merged = fixState(merge(server, state));
-      const changedForServer = needsPush(server, merged);
-      state = merged; persist(); rerender();
-      if (changedForServer || dirty) push(); else setSync('Synced', 'ok');
-    } catch (e) {
-      if (e.code === 401) return lockOut(pass ? 'Wrong passcode' : '');
-      setSync(e.code === 500 ? e.message : 'Offline', 'bad');
-    }
-  }
-  // true if `local` has anything newer than what the server holds
   function needsPush(server, local) {
     if (!server) return local.items.length > 0 || local.channelsAt > 0;
     if ((local.channelsAt || 0) > (server.channelsAt || 0)) return true;
@@ -487,512 +405,471 @@
     const sd = server.deleted || {};
     return Object.entries(local.deleted || {}).some(([id, t]) => !(sd[id] >= t));
   }
+  async function pull() {
+    if (!online || !pass || syncing) return;
+    try {
+      const j = await api('GET');
+      const server = j.state;
+      const merged = fixState(merge(server, state));
+      const changedForServer = needsPush(server, merged);
+      state = merged; persist(); softRender();
+      if (changedForServer || dirty) push(); else setSync('', 'All changes synced');
+    } catch (e) {
+      if (e.code === 401) return lockOut(pass ? 'Wrong passcode' : '');
+      setSync('bad', e.code === 500 ? e.message : 'Offline');
+    }
+  }
   function lockOut(msg) {
     pass = ''; try { localStorage.removeItem(PASSK); } catch (e) {}
-    document.getElementById('lock').classList.add('open');
-    document.getElementById('lockErr').textContent = msg || '';
-    setSync('Locked', 'bad');
+    $('#lock').classList.add('open'); $('#lockErr').textContent = msg || '';
+    setSync('bad', 'Locked'); setTimeout(() => $('#lockIn').focus(), 30);
   }
-  function rerender() {
-    renderAll();
-    if (document.getElementById('view-settings').classList.contains('active') && !document.activeElement?.closest('#settingsChannels')) renderSettings();
-  }
+  // don't redraw under someone typing in Settings or the search box
+  function softRender() { const a = document.activeElement; if (a && (a.dataset?.set || a.id === 'search')) return; render(); }
 
-  // ---------- date helpers (local dates as YYYY-MM-DD, no timezone drift) ----------
-  const pad = n => String(n).padStart(2, '0');
-  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
-  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-  function firstOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
-  const todayStr = () => ymd(new Date());
-  const fmtDate = s => parse(s).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-
-  // ---------- item helpers ----------
-  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-  const chan = id => state.channels.find(c => c.id === id) || state.channels[0];
-  const planned = it => Object.keys(it.platforms).filter(p => it.platforms[p].planned);
-  const postedCount = it => planned(it).filter(p => it.platforms[p].posted).length;
-  // per platform: 'posted' | 'scheduled' | 'todo' (made or in production, not scheduled yet)
-  const pstate = (it, p) => it.platforms[p]?.posted ? 'posted' : it.platforms[p]?.scheduled ? 'scheduled' : 'todo';
-  // per video (all planned platforms): posted everywhere / everything left is scheduled / something still needs scheduling
-  function bucket(it) {
-    const pl = planned(it);
-    if (pl.length && pl.every(p => it.platforms[p].posted)) return 'posted';
-    if (pl.some(p => pstate(it, p) === 'todo')) return 'todo';
-    return 'scheduled';
-  }
-  function status(it) {
-    const pl = planned(it), done = postedCount(it);
-    if (pl.length && done === pl.length) return 'posted';
-    if (it.date < todayStr()) return 'overdue';
-    if (done > 0) return 'partial';
-    return 'upcoming';
-  }
-  function newItem(over = {}) {
-    const c = chan(over.channel || state.channels[0].id);
-    const format = over.format || Object.keys(c.formats)[0];
-    const defaults = (c.formats[format] || { platforms: [] }).platforms;
-    const platforms = {};
-    Object.keys(PLATFORMS).forEach(p => platforms[p] = { planned: defaults.includes(p), scheduled: false, posted: false });
-    return {
-      id: uid(), title: '', channel: c.id, format, date: todayStr(), time: '',
-      stage: 'Idea', platforms, link: '', notes: '', ...over, platforms: over.platforms || platforms,
-    };
-  }
-  const sortItems = arr => arr.slice().sort((a, b) => (a.date + (a.time || '99')).localeCompare(b.date + (b.time || '99')));
-
-  // ---------- view filters (platform + status), remembered per device ----------
-  const FK = 'contentCalendar.filters';
-  const VF = (() => {
-    const d = { pf: 'all', st: 'scheduled' };
-    try { return { ...d, ...JSON.parse(localStorage.getItem(FK) || '{}') }; } catch (e) { return d; }
-  })();
-  const pfKey = () => ({ ig: 'ig', yts: 'yt', ytf: 'yt', fb: 'fb' }[VF.pf] || null);
-  function matchPF(it) {
-    switch (VF.pf) {
-      case 'ig': return it.platforms.ig?.planned;
-      case 'yts': return it.format === 'short' && it.platforms.yt?.planned;
-      case 'ytf': return it.format === 'long' && it.platforms.yt?.planned;
-      case 'fb': return it.platforms.fb?.planned;
-      default: return true;
-    }
-  }
-  // With a platform picked, the state on that platform; with All platforms, the state of the whole video (see bucket)
-  const viewState = it => pfKey() ? pstate(it, pfKey()) : bucket(it);
-  const isPosted = it => viewState(it) === 'posted';
-  function visible(it) {
-    if (!matchPF(it)) return false;
-    return VF.st === 'all' || viewState(it) === VF.st;
-  }
-  function placeKnobs() {
-    document.querySelectorAll('.slider').forEach(sl => {
-      const v = VF[sl.dataset.key];
-      sl.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-checked', b.dataset.v === v); });
-      const b = sl.querySelector('button.on'), k = sl.querySelector('.knob');
-      if (b && b.offsetWidth) { k.style.width = b.offsetWidth + 'px'; k.style.transform = `translateX(${b.offsetLeft}px)`; }
-    });
-    const n = state.items.filter(visible).length;
-    $('#fcount').textContent = `${n} post${n === 1 ? '' : 's'}`;
-  }
-
-  const OUTLET = {
-    ig: { short: 'Instagram · Reels', long: 'Instagram · Videos' },
-    yt: { short: 'YouTube · Shorts', long: 'YouTube · Full length' },
-    fb: { short: 'Facebook · Reels', long: 'Facebook · Videos' },
-  };
-  // a video counts as "made" once it's Ready, or once it's up anywhere
-  const isMade = it => it.stage === 'Ready' || it.stage === 'Posted' || Object.values(it.platforms).some(v => v.posted);
-
-  // ---------- rendering ----------
+  // ================= post helpers =================
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  const chan = id => state.channels.find(c => c.id === id) || state.channels[0];
+  const has = (p, k) => !!p.platforms[k]?.planned;
+  const pst = (p, k) => p.platforms[k]?.posted ? 'posted' : p.platforms[k]?.scheduled ? 'scheduled' : 'none';
+  function setPst(p, k, st) { p.platforms[k] = { planned: true, scheduled: st === 'scheduled', posted: st === 'posted' }; }
+  const plats = p => PL.filter(k => has(p, k));
+  function overall(p) {
+    const L = plats(p); if (!L.length) return 'none';
+    const v = L.map(k => pst(p, k));
+    if (v.every(x => x === 'posted')) return 'posted';
+    if (v.every(x => x !== 'none')) return 'scheduled';
+    return 'none';
+  }
+  const isIdea = p => !(p.title || '').trim();
+  const od = p => p.date < TODAY && overall(p) !== 'posted';
+  const fmtOn = (c, f) => !!(c.formats[f] && !c.formats[f].off);
+  const byDate = (a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || ''));
 
-  function chipHTML(it, opts = {}) {
-    const c = chan(it.channel);
-    const st = status(it);
-    const pfs = planned(it).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${pstate(it, p) === 'posted' ? 'on' : pstate(it, p) === 'scheduled' ? 'sch' : ''}" title="${PLATFORMS[p].label}: ${pstate(it, p) === 'todo' ? 'not scheduled' : pstate(it, p)}">${PLATFORMS[p].short}</span>`).join('');
-    const title = it.title || (opts.showChannel ? `${c.name} ${it.format === 'long' ? 'video' : 'short'}` : (it.format === 'long' ? 'Full video (TBD)' : 'Short (TBD)'));
-    return `<button class="chip ${st === 'posted' ? 'done' : ''} ${st === 'overdue' ? 'overdue' : ''}" style="--c:${c.color}" data-id="${it.id}" title="${esc(title)}">
-      <span class="t">${opts.showChannel ? `<span style="color:${c.color}">●</span> ` : ''}${esc(title)}</span>
-      <span class="m"><span class="fmt">${it.format === 'long' ? 'Long' : 'Short'}</span>${pfs}${st !== 'posted' ? `<span class="stage">${esc(it.stage)}</span>` : ''}</span>
-    </button>`;
+  function pfMatch(p) {
+    const f = ui.pf;
+    if (f === 'all') return true;
+    if (f === 'yts') return has(p, 'yt') && p.format === 'short';
+    if (f === 'ytf') return has(p, 'yt') && p.format === 'long';
+    return has(p, f);
+  }
+  function stageOf(p) { const f = ui.pf, k = f === 'yts' || f === 'ytf' ? 'yt' : f; return k === 'all' ? overall(p) : pst(p, k); }
+  function vis(p) {
+    if (ui.cf !== 'all' && p.channel !== ui.cf) return false;
+    if (!pfMatch(p)) return false;
+    if (ui.sf !== 'all' && stageOf(p) !== ui.sf) return false;
+    return true;
+  }
+  const badges = (p, cls = '') => plats(p).map(k => `<span class="bdg ${pst(p, k)} ${cls}" title="${PLF[k]}: ${pst(p, k) === 'none' ? 'to schedule' : pst(p, k)}">${PLN[k]}</span>`).join('');
+  function status(p) {
+    if (isIdea(p)) return { label: 'Idea', bg: 'rgba(162,159,151,.12)', fg: 'var(--muted)' };
+    const o = overall(p);
+    if (o === 'posted') return { label: 'Posted', bg: 'rgba(91,214,154,.14)', fg: 'var(--g)' };
+    if (o === 'scheduled') return { label: 'Scheduled', bg: 'rgba(120,180,246,.14)', fg: 'var(--b)' };
+    if (od(p)) return { label: 'Overdue', bg: 'rgba(242,107,107,.13)', fg: 'var(--r)' };
+    return { label: 'To schedule', bg: 'rgba(245,184,61,.12)', fg: 'var(--a2)' };
+  }
+  const pill = s => `<span class="pill" style="background:${s.bg};color:${s.fg}">${s.label}</span>`;
+  const title = p => isIdea(p) ? 'Untitled idea' : p.title;
+
+  // ================= actions =================
+  function newPost(date, chId, fmt) {
+    const c = chan(chId || (ui.cf !== 'all' ? ui.cf : state.channels[0].id));
+    const f = fmt && fmtOn(c, fmt) ? fmt : (fmtOn(c, 'short') ? 'short' : FMTS.find(x => fmtOn(c, x)) || 'short');
+    const defs = c.formats[f]?.platforms || [];
+    const platforms = {}; PL.forEach(k => platforms[k] = { planned: defs.includes(k), scheduled: false, posted: false });
+    const p = touch({ id: uid(), title: '', channel: c.id, format: f, date: date || TODAY, time: '', stage: 'Idea', platforms, link: '', notes: '', _new: true });
+    state.items.push(p); save();
+    openDrawer(p.id); render();
+    setTimeout(() => { const t = $('#dTitle'); if (t) t.focus(); }, 30);
+  }
+  function upd(id, fn) { const p = state.items.find(x => x.id === id); if (!p) return; fn(p); delete p._new; touch(p); save(); render(); }
+  function setAll(id, st) { upd(id, p => plats(p).forEach(k => setPst(p, k, st))); toast(st === 'posted' ? 'Marked as posted' : 'Marked as scheduled'); }
+  function plan() {
+    let n = 0;
+    state.channels.forEach(c => FMTS.forEach(f => {
+      if (!fmtOn(c, f)) return;
+      const days = c.formats[f].days || [];
+      for (let i = 0; i < 14; i++) {
+        const d = add(TODAY, i);
+        if (!days.includes(pd(d).getDay())) continue;
+        if (state.items.some(p => p.channel === c.id && p.format === f && p.date === d)) continue;
+        const platforms = {}; PL.forEach(k => platforms[k] = { planned: c.formats[f].platforms.includes(k), scheduled: false, posted: false });
+        state.items.push(touch({ id: uid(), title: '', channel: c.id, format: f, date: d, time: '', stage: 'Idea', platforms, link: '', notes: '' }));
+        n++;
+      }
+    }));
+    save(); render();
+    toast(n ? `Added ${n} idea slot${n > 1 ? 's' : ''} for the next 2 weeks` : (state.channels.some(c => FMTS.some(f => fmtOn(c, f) && (c.formats[f].days || []).length)) ? 'Next 2 weeks already fully planned' : 'Set posting days in Settings first'));
+  }
+  const updCh = (id, fn) => { const c = chan(id); fn(c); state.channelsAt = Date.now(); save(); render(); };
+
+  // ================= rendering =================
+  function render() {
+    document.documentElement.dataset.theme = ui.theme;
+    $('#themeBtn').title = ui.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    $('#nav').innerHTML = [['dash', 'Overview'], ['month', 'Calendar'], ['posts', 'Posts'], ['settings', 'Settings']]
+      .map(([id, l]) => `<button class="${ui.view === id ? 'on' : ''}" data-act="view" data-v="${id}">${l}</button>`).join('');
+    renderFilters();
+    const m = $('#main');
+    if (ui.view === 'dash') m.innerHTML = viewDash();
+    else if (ui.view === 'month') m.innerHTML = viewMonth();
+    else if (ui.view === 'posts') m.innerHTML = viewPosts();
+    else m.innerHTML = viewSettings();
+    if (ui.view === 'posts') $('#search').value = ui.q;
+    if (ui.openId) refreshDrawer();
   }
 
-  function renderStats() {
-    const t = todayStr();
-    const in14 = ymd(addDays(new Date(), 13));
-    const monthStart = ymd(firstOfMonth(new Date()));
-    const weekAgo = ymd(addDays(new Date(), -6));
-    const items = state.items;
-    const postedMonth = items.filter(i => status(i) === 'posted' && i.date >= monthStart && i.date <= t).length;
-    const uploadsMonth = items.filter(i => i.date >= monthStart && i.date <= t).reduce((n, i) => n + postedCount(i), 0);
-    const upcoming = items.filter(i => i.date >= t && i.date <= in14 && status(i) !== 'posted');
-    const overdue = items.filter(i => status(i) === 'overdue').length;
-    const ready = upcoming.filter(i => i.stage === 'Ready').length;
-    const lastWeek = items.filter(i => i.date >= weekAgo && i.date <= t);
-    const lwDone = lastWeek.filter(i => status(i) === 'posted').length;
-    $('#stats').innerHTML = [
-      ['', postedMonth, `Posts fully out this month (${uploadsMonth} platform uploads)`],
-      ['', upcoming.length, 'Planned in next 14 days'],
-      ['ok', `${ready}/${upcoming.length}`, 'Of those, ready to post'],
-      [overdue ? 'bad' : 'ok', overdue, 'Overdue (past date, not posted)'],
-      ['', lastWeek.length ? `${Math.round(lwDone / lastWeek.length * 100)}%` : '–', `Last 7 days on schedule (${lwDone}/${lastWeek.length})`],
-    ].map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  function renderFilters() {
+    const F = $('#filters');
+    if (ui.view === 'settings') { F.style.display = 'none'; return; }
+    F.style.display = '';
+    const P = state.items, V = P.filter(vis);
+    const chs = [{ id: 'all', name: 'All' }, ...state.channels].map(c =>
+      `<button class="chf ${ui.cf === c.id ? 'on' : ''}" data-act="cf" data-v="${c.id}">${c.color ? `<span class="dot" style="background:${c.color}"></span>` : ''}${esc(c.name)}</button>`).join('');
+    const pfs = [['all', 'All'], ['ig', 'IG'], ['yts', 'YT Shorts'], ['ytf', 'YT Full'], ['fb', 'FB']]
+      .map(([id, l]) => `<button class="${ui.pf === id ? 'on' : ''}" data-act="pf" data-v="${id}">${l}</button>`).join('');
+    const sfs = [['all', 'All', null], ['none', 'To schedule', 'var(--faint)'], ['scheduled', 'Scheduled', '#78B4F6'], ['posted', 'Posted', '#5BD69A']]
+      .map(([id, l, d]) => `<button class="${ui.sf === id ? 'on' : ''}" data-act="sf" data-v="${id}">${d ? `<span class="dot" style="width:6px;height:6px;background:${d}"></span>` : ''}${l}</button>`).join('');
+    const active = ui.cf !== 'all' || ui.pf !== 'all' || ui.sf !== 'all';
+    F.innerHTML = `
+      <div class="fx" style="gap:8px"><span class="cap">Channel</span><div class="fx" style="gap:4px;flex-wrap:wrap">${chs}</div></div>
+      <div class="vsep"></div>
+      <div class="fx" style="gap:8px"><span class="cap">Platform</span><div class="seg sm">${pfs}</div></div>
+      <div class="fx" style="gap:8px"><span class="cap">Stage</span><div class="seg sm">${sfs}</div></div>
+      <div class="mono" style="font-size:12.5px;color:var(--dim)">${V.length} of ${P.length} posts</div>
+      ${active ? '<button class="linkbtn" data-act="clear">Clear filters</button>' : ''}`;
   }
 
-  function renderBoard() {
-    const start = addDays(new Date(), -7);
-    const days = Array.from({ length: 22 }, (_, i) => ymd(addDays(start, i)));
-    const t = todayStr();
-    const b = $('#board');
-    b.style.gridTemplateColumns = `150px repeat(${days.length}, minmax(96px, 1fr))`;
-    let html = `<div class="cell head lane" style="--c:transparent">Channel</div>`;
-    days.forEach(d => {
-      const dt = parse(d);
-      html += `<div class="cell head ${d === t ? 'today' : ''}">${DOW[dt.getDay()]}<b>${dt.getDate()}</b>${dt.getDate() === 1 || d === days[0] ? dt.toLocaleDateString(undefined, { month: 'short' }) : ''}</div>`;
-    });
-    const byKey = {};
-    state.items.filter(visible).forEach(i => { (byKey[i.channel + '|' + i.date] ||= []).push(i); });
-    state.channels.forEach(c => {
-      html += `<div class="cell lane" style="--c:${c.color}">${esc(c.name)}</div>`;
-      days.forEach(d => {
-        const list = sortItems(byKey[c.id + '|' + d] || []);
-        html += `<div class="cell add ${d < t ? 'past' : ''} ${d === t ? 'todaycol' : ''}">${list.map(i => chipHTML(i)).join('')}<button class="plus" data-add="${c.id}|${d}">+</button></div>`;
-      });
-    });
-    b.innerHTML = html;
-    // scroll so that today is near the left edge on first render
-    const wrap = b.parentElement;
-    if (!wrap.dataset.scrolled) { wrap.scrollLeft = 96 * 5; wrap.dataset.scrolled = '1'; }
+  function chipHTML(p) {
+    const cls = ['chip', isIdea(p) ? 'idea' : '', od(p) ? 'od' : ''].join(' ');
+    return `<button class="${cls}" data-act="open" data-id="${p.id}" title="${esc(title(p))}">
+      <span class="t">${esc(title(p))}</span>
+      <span class="m"><span class="fm">${p.format === 'long' ? 'Full' : 'Short'}</span>${badges(p, 'sm')}</span></button>`;
   }
 
-  function renderChannelCards() {
-    const t = todayStr();
-    $('#channelCards').innerHTML = state.channels.map(c => {
-      const mine = state.items.filter(i => i.channel === c.id);
-      const made = mine.filter(isMade);
-      const rows = [];
-      Object.keys(c.formats).forEach(f => {
-        const vids = made.filter(i => i.format === f);
-        if (!vids.length && !c.formats[f].platforms.length) return;
-        const n = k => vids.filter(i => bucket(i) === k).length;
-        const label = f === 'long' ? 'Full videos' : 'Reels';
-        rows.push(`<div class="fmt-h"><b>${label}</b> · ${vids.length} made</div>
-          <div class="buckets">
-            <button class="bk todo" data-jump="${c.id}|${f}|todo"><b>${n('todo')}</b> not scheduled</button>
-            <button class="bk sch" data-jump="${c.id}|${f}|scheduled"><b>${n('scheduled')}</b> scheduled</button>
-            <button class="bk ok" data-jump="${c.id}|${f}|posted"><b>${n('posted')}</b> posted</button>
-          </div>`);
-        Object.keys(PLATFORMS).forEach(p => {
-          const pl = vids.filter(i => i.platforms[p]?.planned);
-          if (!pl.length && !c.formats[f].platforms.includes(p)) return;
-          const cnt = k => pl.filter(i => pstate(i, p) === k).length;
-          const w = k => pl.length ? (cnt(k) / pl.length * 100).toFixed(1) : 0;
-          rows.push(`<div class="prow2"><span>${OUTLET[p][f]}</span>
-            <span class="r"><span class="g">${cnt('posted')}</span> · <span class="b">${cnt('scheduled')}</span> · <span class="m">${cnt('todo')}</span> <span class="of">of ${pl.length}</span></span>
-            <div class="sbar"><i class="g" style="width:${w('posted')}%"></i><i class="b" style="width:${w('scheduled')}%"></i></div></div>`);
-        });
-      });
-      const inProd = mine.filter(i => !isMade(i)).length;
-      if (inProd) rows.push(`<div class="inprod">${inProd} more in production (idea → editing)</div>`);
-      const next = sortItems(mine.filter(i => i.date >= t && status(i) !== 'posted'))[0];
-      return `<div class="ccard" style="--c:${c.color}">
-        <h3>${esc(c.name)}</h3><div class="handles">${esc(c.handles || '')}</div>
-        ${rows.join('')}
-        <div class="next">Next up: ${next ? `<b>${esc(next.title || (next.format === 'long' ? 'Full video' : 'Short'))}</b> · ${fmtDate(next.date)} · ${esc(next.stage)}` : '<b>nothing planned</b>'}</div>
+  function viewDash() {
+    const P = state.items, V = P.filter(vis), chs = state.channels, td = pd(TODAY);
+    const today = P.filter(p => p.date === TODAY), ods = P.filter(od).sort(byDate);
+    const mo = TODAY.slice(0, 7), thisMonth = P.filter(p => p.date.slice(0, 7) === mo && p.date <= TODAY);
+    const out = thisMonth.filter(p => overall(p) === 'posted').length;
+    const uploads = thisMonth.reduce((a, p) => a + plats(p).filter(k => pst(p, k) === 'posted').length, 0);
+    const n14 = P.filter(p => p.date >= TODAY && p.date <= add(TODAY, 13));
+    const n14s = n14.filter(p => overall(p) !== 'none').length, ideas = n14.filter(isIdea).length;
+    let tot = 0, ok = 0;
+    P.filter(p => p.date < TODAY && p.date >= add(TODAY, -7)).forEach(p => plats(p).forEach(k => { tot++; if (pst(p, k) === 'posted') ok++; }));
+    const pct = tot ? Math.round(ok / tot * 100) : 100;
+    const kpis = [
+      { l: 'Fully out this month', v: out, s: `${uploads} platform uploads in ${MON[td.getMonth()]}`, c: 'var(--text)', act: 'kpi-posted' },
+      { l: 'Planned, next 14 days', v: n14.length, s: `${n14s} scheduled · ${n14.length - n14s} to schedule${ideas ? ` · ${ideas} ideas` : ''}`, c: 'var(--text)', act: 'kpi-month' },
+      { l: 'Overdue', v: ods.length, s: 'Past date, not posted everywhere', c: ods.length ? 'var(--r)' : 'var(--g)', act: 'kpi-overdue' },
+      { l: 'On schedule, last 7 days', v: pct + '%', s: `${ok} of ${tot} uploads went out`, c: pct >= 80 ? 'var(--g)' : 'var(--a2)', act: '', bar: pct },
+    ].map(k => `<button class="kpi" ${k.act ? `data-act="${k.act}"` : 'style="cursor:default"'}>
+        <div class="l">${k.l}</div><div class="v" style="color:${k.c}">${k.v}</div><div class="s">${k.s}</div>
+        ${k.bar !== undefined ? `<div class="kbar"><i style="width:${k.bar}%;background:${k.c}"></i></div>` : ''}</button>`).join('');
+
+    const att = [...ods, ...today.filter(p => overall(p) === 'none' && !od(p))];
+    const attHTML = att.length ? `<section>
+      <div class="fx" style="align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Needs attention</h2><span class="sub">Overdue or due today and not yet scheduled everywhere</span>${att.length > 8 ? `<button class="linkbtn" data-act="kpi-overdue">See all ${att.length}</button>` : ''}</div>
+      <div class="card" style="overflow:hidden">${att.slice(0, 8).map(p => {
+        const c = chan(p.channel), late = od(p), dd = Math.round((pd(TODAY) - pd(p.date)) / 864e5);
+        return `<div class="att">
+          <span class="mono" style="font-size:12px;color:${late ? 'var(--r)' : 'var(--a2)'}">${late ? dd + 'd late' : 'Today'}</span>
+          <button class="open" data-act="open" data-id="${p.id}"><span class="dot" style="width:8px;height:8px;background:${c.color}"></span><span class="ell" style="font-weight:500">${esc(title(p))}</span><span class="ell" style="font-size:12.5px;color:var(--dim);min-width:0">${esc(c.name)}</span></button>
+          <div class="fx bd" style="gap:4px">${badges(p)}</div>
+          <div class="fx ac" style="gap:6px"><button class="mini b" data-act="all-sched" data-id="${p.id}">Mark scheduled</button><button class="mini g" data-act="all-posted" data-id="${p.id}">Mark posted</button></div>
+        </div>`;
+      }).join('')}</div></section>` : '';
+
+    // runway: this week's Monday + 14 days
+    const N = 14, start = add(TODAY, -dowi(TODAY)), days = Array.from({ length: N }, (_, i) => add(start, i));
+    const cols = `180px repeat(${N},minmax(100px,1fr))`;
+    const ccls = d => d === TODAY ? 'today' : (dowi(d) > 4 ? 'wknd' : '');
+    const head = `<div class="tlg tlh" style="grid-template-columns:${cols}"><div class="cap">Channel</div>${days.map(d =>
+      `<div class="${d === TODAY ? 'today' : d < TODAY ? 'past' : ''}" style="${d === TODAY ? 'background:rgba(245,184,61,.05)' : dowi(d) > 4 ? 'background:var(--wknd)' : ''}"><span class="dw">${DOW[dowi(d)]}</span><span class="dn">${pd(d).getDate()}</span></div>`).join('')}</div>`;
+    const rows = chs.filter(c => ui.cf === 'all' || ui.cf === c.id).map(c => {
+      const cp = V.filter(p => p.channel === c.id && p.date >= days[0] && p.date <= days[N - 1]);
+      return `<div class="tlg tlr" style="grid-template-columns:${cols}">
+        <div class="lane"><div class="fx" style="gap:8px;min-width:0"><span class="dot" style="width:8px;height:8px;background:${c.color}"></span><span class="ell" style="font-weight:600;font-size:13.5px">${esc(c.name)}</span></div><span style="font-size:12px;color:var(--dim);padding-left:16px">${cp.length} in view</span></div>
+        ${days.map(d => `<div class="tlc ${ccls(d)}">${cp.filter(p => p.date === d).sort(byDate).map(chipHTML).join('')}<button class="addcell" data-act="new-at" data-d="${d}" data-c="${c.id}" title="Add a post">+</button></div>`).join('')}
       </div>`;
     }).join('');
-  }
 
-  function renderMonth() {
-    const m = monthCursor;
-    $('#monthTitle').textContent = m.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-    const filter = $('#monthFilter').value;
-    const start = addDays(m, -((m.getDay() + 6) % 7)); // weeks start Monday
-    const t = todayStr();
-    const byDate = {};
-    state.items.filter(i => visible(i) && (!filter || i.channel === filter)).forEach(i => (byDate[i.date] ||= []).push(i));
-    let html = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dow">${d}</div>`).join('');
-    const last = new Date(m.getFullYear(), m.getMonth() + 1, 0);
-    const cells = Math.ceil((Math.round((last - start) / 864e5) + 1) / 7) * 7;
-    for (let i = 0; i < cells; i++) {
-      const d = addDays(start, i);
-      const s = ymd(d);
-      html += `<div class="day ${d.getMonth() !== m.getMonth() ? 'other' : ''} ${s === t ? 'today' : ''}">
-        <div class="num"><b>${d.getDate()}</b><button data-add="|${s}" title="Add post">+</button></div>
-        ${sortItems(byDate[s] || []).map(it => chipHTML(it, { showChannel: true })).join('')}
+    const pipe = chs.map(c => {
+      const formats = FMTS.map(f => {
+        const L = P.filter(p => p.channel === c.id && p.format === f && !isIdea(p));
+        if (!L.length) return '';
+        const cnt = x => L.filter(p => overall(p) === x).length;
+        const prows = PL.filter(k => L.some(p => has(p, k))).map(k => {
+          const E = L.filter(p => has(p, k)), pp = E.filter(p => pst(p, k) === 'posted').length, ss = E.filter(p => pst(p, k) === 'scheduled').length;
+          return `<div class="prow"><div class="fx" style="justify-content:space-between;font-size:12.5px"><span style="color:var(--muted)">${FL[f][k]}</span><span class="mono" style="color:var(--dim)">${pp}/${E.length}${ss ? ` <span style="color:var(--b)">+${ss} sched</span>` : ''}</span></div>
+            <div class="pbar"><div style="width:${E.length ? pp / E.length * 100 : 0}%;background:#5BD69A"></div><div style="width:${E.length ? ss / E.length * 100 : 0}%;background:#78B4F6"></div></div></div>`;
+        }).join('');
+        return `<div class="pfmt"><div class="h"><div style="font-size:13.5px;font-weight:600">${f === 'short' ? 'Shorts &amp; Reels' : 'Full videos'} <span style="color:var(--dim);font-weight:400">· ${L.length} made</span></div>
+          <div class="pnums"><button style="color:var(--g)" data-act="jump" data-c="${c.id}" data-s="posted">${cnt('posted')} posted</button><button style="color:var(--b)" data-act="jump" data-c="${c.id}" data-s="scheduled">${cnt('scheduled')} sched</button><button style="color:var(--a2)" data-act="jump" data-c="${c.id}" data-s="none">${cnt('none')} to schedule</button></div></div>${prows}</div>`;
+      }).join('');
+      const nx = P.filter(p => p.channel === c.id && p.date >= TODAY && overall(p) !== 'posted').sort(byDate)[0];
+      return `<div class="card pcard">
+        <div class="fx" style="gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:${c.color};flex:none"></span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:600;font-size:15px">${esc(c.name)}</span><span class="ell" style="font-size:12.5px;color:var(--dim)">${esc(c.handles || '')}</span></div></div>
+        ${formats || '<div class="sub">Nothing made yet.</div>'}
+        <div class="f1"></div>
+        ${nx ? `<button class="next" data-act="open" data-id="${nx.id}"><span class="cap" style="font-size:11px">Next up · ${nx.date === TODAY ? 'Today' : nice(nx.date)}</span><span class="ell" style="font-size:13px;font-weight:500;max-width:100%">${esc(title(nx))}</span></button>` : ''}
       </div>`;
-    }
-    $('#month').innerHTML = html;
+    }).join('');
+
+    return `<div style="display:flex;flex-direction:column;gap:32px">
+      <div><div class="mono cap" style="font-size:12px">${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][td.getDay()]}, ${td.getDate()} ${MON[td.getMonth()]}</div>
+        <h1 style="margin-top:6px;font-size:30px;letter-spacing:-.025em;text-wrap:balance">${today.length} post${today.length === 1 ? '' : 's'} due today${ods.length ? `, ${ods.length} overdue.` : '. Nothing overdue.'}</h1></div>
+      <div class="kpis">${kpis}</div>
+      ${attHTML}
+      <section>
+        <div class="fx" style="align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Runway</h2><span class="sub" style="white-space:nowrap">${nice(days[0])} – ${nice(days[N - 1])}</span><div class="f1"></div>
+          <div class="legend"><span><span class="bdg posted sm">IG</span>posted</span><span><span class="bdg scheduled sm">IG</span>scheduled</span><span><span class="bdg none sm">IG</span>to schedule</span><span><span style="width:12px;height:12px;border-radius:3px;border:1px solid rgba(242,107,107,.6)"></span>overdue</span></div></div>
+        <div class="tl"><div style="min-width:${180 + N * 100}px">${head}${rows}</div></div>
+      </section>
+      <section>
+        <div class="fx" style="align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Pipeline by channel</h2><span class="sub">Made → scheduled → posted, per platform. Tap a number to see those posts.</span></div>
+        <div class="pipe">${pipe}</div>
+      </section>
+    </div>`;
   }
 
-  function renderList() {
-    const q = $('#fText').value.trim().toLowerCase();
-    const ch = $('#fChannel').value;
-    let rows = sortItems(state.items.filter(visible)).filter(i =>
-      (!ch || i.channel === ch) && (!listFormat || i.format === listFormat) && (!q || (i.title + ' ' + i.notes).toLowerCase().includes(q)));
-    $('#fFmtNote').innerHTML = listFormat ? `${listFormat === 'long' ? 'Full videos' : 'Reels'} only <button class="btn small" id="fFmtClear">×</button>` : '';
-    if (VF.st !== 'scheduled') rows = rows.reverse(); // scheduled: soonest first; otherwise newest first
-    $('#listBody').innerHTML = rows.length ? rows.map(i => {
-      const c = chan(i.channel), s = status(i);
-      const pfs = planned(i).filter(p => !pfKey() || p === pfKey()).map(p => `<span class="pf ${pstate(i, p) === 'posted' ? 'on' : pstate(i, p) === 'scheduled' ? 'sch' : ''}" title="${PLATFORMS[p].label}: ${pstate(i, p) === 'todo' ? 'not scheduled' : pstate(i, p)}">${PLATFORMS[p].short}</span>`).join(' ');
-      const color = { posted: 'var(--ok)', overdue: 'var(--bad)', partial: 'var(--warn)', upcoming: 'var(--muted)' }[s];
-      return `<tr data-id="${i.id}"><td>${fmtDate(i.date)}${i.time ? ' · ' + i.time : ''}</td>
-        <td><span class="dot" style="--c:${c.color}"></span>${esc(c.name)}</td>
-        <td>${esc(i.title || '—')}</td><td>${FORMATS[i.format]}</td>
-        <td><span style="color:${color}">${s === 'posted' ? 'Posted' : (s === 'overdue' ? 'Overdue · ' : '') + (bucket(i) === 'scheduled' ? 'Scheduled' : isMade(i) ? 'Not scheduled' : esc(i.stage))}</span></td>
-        <td>${pfs}</td></tr>`;
-    }).join('') : `<tr><td colspan="6" class="empty">No posts match. Add one with “+ New post”.</td></tr>`;
+  function viewMonth() {
+    const V = state.items.filter(vis), [y, m] = ui.month.split('-').map(Number), first = ui.month + '-01';
+    let cur = add(first, -dowi(first)); const weeks = [];
+    while (weeks.length < 6) { const w = []; for (let i = 0; i < 7; i++) { w.push(cur); cur = add(cur, 1); } weeks.push(w); if (cur.slice(0, 7) !== ui.month) break; }
+    const body = weeks.map(w => `<div class="mrow">${w.map(d => {
+      const inM = d.slice(0, 7) === ui.month, L = V.filter(p => p.date === d).sort(byDate), ex = ui.expand === d, show = ex ? L : L.slice(0, 3);
+      const cls = ['mday', !inM ? 'out' : '', d === TODAY ? 'today' : '', d < TODAY ? 'past' : ''].join(' ');
+      return `<div class="${cls}">
+        <div class="fx" style="justify-content:space-between;margin-bottom:2px"><span class="mnum">${pd(d).getDate()}</span><button class="madd" data-act="new-at" data-d="${d}" title="Add a post">+</button></div>
+        ${show.map(p => { const c = chan(p.channel);
+          return `<button class="mchip ${isIdea(p) ? 'idea' : ''} ${od(p) ? 'od' : ''}" data-act="open" data-id="${p.id}" title="${esc(title(p))}"><span class="dot" style="width:6px;height:6px;background:${c.color}"></span><span class="f1 ell">${esc(title(p))}</span><span class="fx pds" style="gap:2px;flex:none">${plats(p).map(k => `<span class="pdot ${pst(p, k)}"></span>`).join('')}</span></button>`; }).join('')}
+        ${L.length > 3 ? `<button class="more" data-act="more" data-d="${d}">${ex ? 'Show less' : `+${L.length - 3} more`}</button>` : ''}
+      </div>`;
+    }).join('')}</div>`).join('');
+    return `<div style="display:flex;flex-direction:column;gap:16px">
+      <div class="fx" style="gap:10px;flex-wrap:wrap">
+        <h1 style="min-width:220px">${MON[m - 1]} ${y}</h1>
+        <button class="btn sm" style="width:32px;padding:0" data-act="m-prev">‹</button>
+        <button class="btn sm" style="width:32px;padding:0" data-act="m-next">›</button>
+        <button class="btn sm" data-act="m-today">Today</button>
+        <div class="f1"></div>
+        <span class="legend" style="font-size:12.5px"><span><span class="pdot posted" style="width:6px;height:6px"></span>posted</span><span><span class="pdot scheduled" style="width:6px;height:6px"></span>scheduled</span><span><span class="pdot none" style="width:6px;height:6px"></span>to schedule</span></span>
+      </div>
+      <div class="mgrid"><div class="mrow h">${DOW.map(d => `<div class="cap">${d}</div>`).join('')}</div>${body}</div>
+    </div>`;
   }
 
-  function renderChannelSelects() {
-    const opts = state.channels.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-    const keep = (sel, all) => { const v = sel.value; sel.innerHTML = `<option value="">${all}</option>` + opts; sel.value = v; };
-    keep($('#fChannel'), 'All channels');
-    keep($('#monthFilter'), 'All channels');
-    $('#eChannel').innerHTML = opts;
+  function viewPosts() {
+    const q = ui.q.trim().toLowerCase();
+    const L = state.items.filter(vis).filter(p => !q || ((p.title || '') + ' ' + (p.notes || '')).toLowerCase().includes(q));
+    const asc = byDate, desc = (a, b) => byDate(b, a);
+    const G = [['Overdue', 'var(--r)', L.filter(od).sort(asc)], ['Today', 'var(--a2)', L.filter(p => p.date === TODAY && !od(p))], ['Upcoming', 'var(--text)', L.filter(p => p.date > TODAY).sort(asc)], ['Earlier', 'var(--muted)', L.filter(p => p.date < TODAY && !od(p)).sort(desc)]];
+    const groups = G.filter(g => g[2].length).map(([label, color, rows]) => `<div>
+      <div class="ghead" style="color:${color}">${label}<span class="mono" style="font-weight:400;color:var(--dim)">${rows.length}</span></div>
+      ${rows.map(p => { const c = chan(p.channel);
+        return `<button class="prowb pgrid" data-act="open" data-id="${p.id}">
+          <span class="mono" style="font-size:12.5px;color:var(--muted)">${nice(p.date)}</span>
+          <span class="fx hm" style="gap:8px;min-width:0"><span class="dot" style="background:${c.color}"></span><span class="ell" style="color:var(--muted)">${esc(c.name)}</span></span>
+          <span class="ell" style="font-weight:500;color:${isIdea(p) ? 'var(--dim)' : 'var(--text)'}">${esc(title(p))}</span>
+          <span class="hm" style="font-size:12.5px;color:var(--muted)">${p.format === 'long' ? 'Full' : 'Short'}</span>
+          <span class="fx hm" style="gap:4px">${badges(p)}</span>
+          <span>${pill(status(p))}</span></button>`; }).join('')}
+    </div>`).join('');
+    return `<div style="display:flex;flex-direction:column;gap:20px">
+      <div class="fx" style="gap:12px;flex-wrap:wrap"><h1>Posts</h1><div class="f1"></div><input id="search" class="search" placeholder="Search titles and notes" /></div>
+      <div class="card" style="overflow:hidden">
+        <div class="pgrid phead cap"><span>Date</span><span class="hm">Channel</span><span>Title</span><span class="hm">Format</span><span class="hm">Platforms</span><span>Status</span></div>
+        ${groups || '<div style="padding:48px;text-align:center;color:var(--dim)">No posts match these filters.</div>'}
+      </div></div>`;
   }
 
-  function renderSettings() {
-    const order = [1, 2, 3, 4, 5, 6, 0];
-    $('#settingsChannels').innerHTML = state.channels.map(c => `
-      <div class="card" style="--c:${c.color}">
-        <div class="row3">
-          <div class="field"><label>Channel name</label><input type="text" data-c="${c.id}" data-k="name" value="${esc(c.name)}" /></div>
-          <div class="field"><label>Handles / note</label><input type="text" data-c="${c.id}" data-k="handles" value="${esc(c.handles || '')}" /></div>
-          <div class="field"><label>Colour</label><input type="color" data-c="${c.id}" data-k="color" value="${c.color}" style="width:100%;height:36px;background:none;border:1px solid var(--line);border-radius:8px" /></div>
+  function viewSettings() {
+    const chs = state.channels.map(c => `<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px;align-items:end">
+        <label class="slabel">Channel name<input class="sinput" style="font-weight:500" data-set="name" data-c="${c.id}" value="${esc(c.name)}"></label>
+        <label class="slabel">Handles / note<input class="sinput" data-set="handles" data-c="${c.id}" value="${esc(c.handles || '')}"></label>
+        <div class="slabel">Colour<div class="fx" style="gap:6px;height:38px">${SW.map(col => `<button class="sw ${col.toLowerCase() === (c.color || '').toLowerCase() ? 'on' : ''}" style="background:${col}" data-act="s-color" data-c="${c.id}" data-v="${col}" title="${col}"></button>`).join('')}</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;border-top:1px solid var(--line)">
+        ${FMTS.map(f => { const on = fmtOn(c, f), F = c.formats[f] || { platforms: [], days: [] };
+          return `<div class="sfmt">
+            <div class="fx" style="gap:10px;width:170px;flex:none"><button class="tog ${on ? 'on' : ''}" data-act="s-fmt" data-c="${c.id}" data-f="${f}" title="${on ? 'Turn off' : 'Turn on'}"><span></span></button><span style="font-weight:600;font-size:13.5px;white-space:nowrap;color:${on ? 'var(--text)' : 'var(--dim)'}">${f === 'short' ? 'Shorts &amp; Reels' : 'Full length'}</span></div>
+            <div class="fx" style="gap:8px;opacity:${on ? 1 : .35}"><span style="font-size:12px;color:var(--dim);width:78px">Posting days</span>
+              <div class="fx" style="gap:4px">${['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((l, i) => { const jd = (i + 1) % 7, a = (F.days || []).includes(jd);
+                return `<button class="opt day ${a ? 'on' : ''}" data-act="s-day" data-c="${c.id}" data-f="${f}" data-v="${jd}" ${on ? '' : 'disabled'}>${l}</button>`; }).join('')}</div></div>
+            <div class="fx" style="gap:8px;opacity:${on ? 1 : .35}"><span style="font-size:12px;color:var(--dim)">Platforms</span>
+              <div class="fx" style="gap:4px">${PL.map(k => `<button class="opt pl ${(F.platforms || []).includes(k) ? 'on' : ''}" data-act="s-plat" data-c="${c.id}" data-f="${f}" data-v="${k}" ${on ? '' : 'disabled'}>${PLN[k]}</button>`).join('')}</div></div>
+          </div>`; }).join('')}
+      </div></div>`).join('');
+    return `<div style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+      <div><h1>Settings</h1><p style="margin:6px 0 0;color:var(--muted);font-size:13.5px;text-wrap:pretty">Platforms are what a new post of that format is planned for. Posting days drive <span style="color:var(--text);font-weight:500">Plan 2 weeks</span> — it adds an empty idea slot on each posting day that doesn't already have a post of that format.</p></div>
+      ${chs}
+      <div class="card" style="padding:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px"><div style="font-weight:600;font-size:15px">Backup &amp; sync</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;text-wrap:pretty">${online ? 'Your calendar syncs to every device you unlock with the passcode. Export a backup now and then.' : 'Opened from a file, so data lives only in this browser. Export a backup, or open the deployed site to sync.'}</div></div>
+        <div class="fx" style="gap:8px;flex-wrap:wrap">
+          <button class="btn sm" data-act="export">Export JSON</button>
+          <label class="btn sm fx" style="cursor:pointer">Import JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+          <button class="btn sm" style="border-color:rgba(242,107,107,.35);background:transparent;color:var(--r)" data-act="delete-all">Delete all posts</button>
         </div>
-        ${Object.keys(FORMATS).map(f => {
-          const fc = c.formats[f];
-          if (!fc) return `<div class="cad"><span style="color:var(--muted)">${FORMATS[f]}</span><span><button class="btn small" data-addfmt="${c.id}|${f}">Enable ${FORMATS[f].toLowerCase()}</button></span></div>`;
-          return `<div class="cad"><b>${FORMATS[f]}</b>
-            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-              <span style="color:var(--muted);font-size:12px">Posting days</span>
-              <div class="days">${order.map(d => `<button class="${fc.days.includes(d) ? 'on' : ''}" data-day="${c.id}|${f}|${d}">${DOW[d][0]}${DOW[d][1]}</button>`).join('')}</div>
-              <span style="color:var(--muted);font-size:12px">Default platforms</span>
-              <div class="seg">${Object.keys(PLATFORMS).map(p => `<button class="${fc.platforms.includes(p) ? 'on' : ''}" data-defp="${c.id}|${f}|${p}">${PLATFORMS[p].short}</button>`).join('')}</div>
-              ${f === 'long' ? `<button class="btn small danger" data-rmfmt="${c.id}|${f}">Disable</button>` : ''}
-            </div></div>`;
-        }).join('')}
-      </div>`).join('') +
-      `<div class="card"><p style="margin:0">Posting days drive <b>Plan next 2 weeks</b>: it adds an empty “Idea” slot on each posting day that doesn't already have a post of that type for the channel. Facebook is off by default — switch on “FB” above for any format you cross-post.</p></div>`;
+      </div></div>`;
   }
 
-  function renderAll() {
-    renderChannelSelects();
-    renderStats(); renderBoard(); renderChannelCards();
-    renderMonth(); renderList(); placeKnobs();
-    if ($('#view-settings').classList.contains('active')) renderSettings();
+  // ================= drawer =================
+  function openDrawer(id) {
+    const p = state.items.find(x => x.id === id); if (!p) return;
+    ui.openId = id;
+    $('#drawerHost').innerHTML = `<div class="scrim" data-act="d-close"></div>
+      <aside class="drawer" role="dialog" aria-label="Edit post">
+        <div class="dhead"><span id="dPill"></span><span class="mono" id="dDate" style="font-size:12px;color:var(--dim);white-space:nowrap"></span><div class="f1"></div>
+          <span class="mono" style="font-size:11px;color:var(--dim);padding:2px 6px;border:1px solid var(--bd);border-radius:5px">Esc</span>
+          <button class="x" style="width:30px;height:30px;font-size:18px;color:var(--muted)" data-act="d-close">×</button></div>
+        <div class="dbody">
+          <input id="dTitle" class="dtitle" placeholder="Untitled idea">
+          <div class="dfield"><span class="cap">Channel</span><div class="fx" style="gap:6px;flex-wrap:wrap" id="dCh"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <label class="dfield"><span class="cap">Date</span><input type="date" id="dDateIn" class="dinput"></label>
+            <div class="dfield"><span class="cap">Format</span><div class="iseg" style="height:36px" id="dFmt"></div></div>
+          </div>
+          <div class="dfield"><span class="cap">Platforms</span><div style="border:1px solid var(--line);border-radius:10px;overflow:hidden" id="dPlats"></div></div>
+          <label class="dfield"><span class="cap">Link</span><input id="dLink" class="dinput" placeholder="https://…"></label>
+          <label class="dfield"><span class="cap">Notes</span><textarea id="dNotes" class="dtext" rows="5" placeholder="Hook, script link, caption, hashtags…"></textarea></label>
+        </div>
+        <div class="dfoot"><button class="danger" data-act="d-delete">Delete</button><div class="f1"></div>
+          <button class="btn sm" style="color:var(--b);height:36px" data-act="d-sched">Schedule all</button>
+          <button class="btn primary" style="padding:0 14px;height:36px;font-size:13px" data-act="d-posted">Mark all posted</button></div>
+      </aside>`;
+    $('#dTitle').value = p.title || ''; $('#dDateIn').value = p.date; $('#dLink').value = p.link || ''; $('#dNotes').value = p.notes || '';
+    refreshDrawer();
+  }
+  function refreshDrawer() {
+    const p = state.items.find(x => x.id === ui.openId);
+    if (!p) { ui.openId = null; $('#drawerHost').innerHTML = ''; return; }
+    if (!$('#dPill')) return;
+    $('#dPill').innerHTML = pill(status(p)); $('#dDate').textContent = nice(p.date);
+    $('#dCh').innerHTML = state.channels.map(c => `<button class="chopt ${p.channel === c.id ? 'on' : ''}" data-act="d-ch" data-v="${c.id}"><span class="dot" style="background:${c.color}"></span>${esc(c.name)}</button>`).join('');
+    $('#dFmt').innerHTML = [['short', 'Short / Reel'], ['long', 'Full length']].map(([f, l]) => `<button class="${p.format === f ? 'on' : ''}" data-act="d-fmt" data-v="${f}">${l}</button>`).join('');
+    $('#dPlats').innerHTML = PL.map(k => { const on = has(p, k), st = pst(p, k);
+      return `<div class="platrow"><span style="font-size:13.5px;font-weight:500;width:80px;flex:none;color:${on ? 'var(--text)' : 'var(--dim)'}">${PLF[k]}</span>
+        ${on ? `<div class="iseg f1">${[['none', 'To schedule'], ['scheduled', 'Scheduled'], ['posted', 'Posted']].map(([s, l]) => `<button style="height:26px;font-size:12px" class="${st === s ? 'on ' + s : ''}" data-act="d-pst" data-k="${k}" data-v="${s}">${l}</button>`).join('')}</div>
+          <button class="x" data-act="d-prm" data-k="${k}" title="Not posting on ${PLF[k]}">×</button>`
+          : `<button class="addp" data-act="d-padd" data-k="${k}">+ Add</button>`}</div>`; }).join('');
+    // pick up edits synced from another device, but never under the cursor
+    const set = (sel, v) => { const el = $(sel); if (el && document.activeElement !== el && el.value !== (v || '')) el.value = v || ''; };
+    set('#dTitle', p.title); set('#dDateIn', p.date); set('#dLink', p.link); set('#dNotes', p.notes);
+  }
+  function closeDrawer() {
+    const id = ui.openId; ui.openId = null; $('#drawerHost').innerHTML = '';
+    const p = state.items.find(x => x.id === id);
+    // a brand-new post closed without anything filled in is dropped
+    if (p && p._new && isIdea(p) && !p.notes && !p.link) { tombstone(p.id); state.items = state.items.filter(x => x.id !== p.id); save(); }
+    render();
   }
 
-  // ---------- editor ----------
-  function openEditor(item, isNew) {
-    editingId = isNew ? null : item.id;
-    draft = structuredClone(item);
-    $('#mTitle').textContent = isNew ? 'New post' : 'Edit post';
-    $('#eDelete').style.display = isNew ? 'none' : '';
-    $('#eDup').style.display = isNew ? 'none' : '';
-    $('#eTitle').value = draft.title;
-    $('#eChannel').value = draft.channel;
-    $('#eDate').value = draft.date;
-    $('#eTime').value = draft.time || '';
-    $('#eLink').value = draft.link || '';
-    $('#eNotes').value = draft.notes || '';
-    fillFormats();
-    renderEditorBits();
-    $('#backdrop').classList.add('open');
-    setTimeout(() => $('#eTitle').focus(), 30);
-  }
-  function fillFormats() {
-    const c = chan(draft.channel);
-    $('#eFormat').innerHTML = Object.keys(c.formats).map(f => `<option value="${f}">${FORMATS[f]}</option>`).join('');
-    if (!c.formats[draft.format]) draft.format = Object.keys(c.formats)[0];
-    $('#eFormat').value = draft.format;
-  }
-  function applyDefaultPlatforms() {
-    const defs = chan(draft.channel).formats[draft.format].platforms;
-    Object.keys(PLATFORMS).forEach(p => draft.platforms[p] = { planned: defs.includes(p), posted: false });
-  }
-  function renderEditorBits() {
-    $('#eStage').innerHTML = STAGES.map(s => `<button class="${draft.stage === s ? 'on' : ''}" data-stage="${s}">${s}</button>`).join('');
-    $('#ePlatforms').innerHTML = Object.keys(PLATFORMS).map(p => {
-      const v = draft.platforms[p];
-      const st = pstate(draft, p);
-      return `<div class="prow ${v.planned ? '' : 'off'}"><span>${PLATFORMS[p].label}</span>
-        <label><input type="checkbox" data-pp="${p}" ${v.planned ? 'checked' : ''}/> Planned</label>
-        <div class="seg pseg">${[['todo', 'Not scheduled'], ['scheduled', 'Scheduled'], ['posted', 'Posted']].map(([k, l]) =>
-          `<button type="button" class="${st === k ? 'on ' + k : ''}" data-ps="${p}|${k}" ${v.planned ? '' : 'disabled'}>${l}</button>`).join('')}</div></div>`;
-    }).join('');
-  }
-  function closeEditor() { $('#backdrop').classList.remove('open'); editingId = null; draft = null; }
-  function saveEditor() {
-    draft.title = $('#eTitle').value.trim();
-    draft.date = $('#eDate').value || todayStr();
-    draft.time = $('#eTime').value;
-    draft.link = $('#eLink').value.trim();
-    draft.notes = $('#eNotes').value;
-    const pl = planned(draft);
-    if (!pl.length) { toast('Pick at least one platform'); return; }
-    syncStage();
-    touch(draft);
-    if (editingId) state.items = state.items.map(i => i.id === editingId ? draft : i);
-    else state.items.push(draft);
-    save(); closeEditor(); renderAll();
-    toast('Saved');
-  }
-
-  // ---------- planning ----------
-  function planTwoWeeks() {
-    const hasDays = state.channels.some(c => Object.values(c.formats).some(f => f.days.length));
-    if (!hasDays) { toast('Set posting days per channel in Settings first'); switchView('settings'); return; }
-    let added = 0;
-    for (let n = 0; n < 14; n++) {
-      const d = addDays(new Date(), n), s = ymd(d);
-      state.channels.forEach(c => Object.entries(c.formats).forEach(([f, fc]) => {
-        if (!fc.days.includes(d.getDay())) return;
-        if (state.items.some(i => i.channel === c.id && i.format === f && i.date === s)) return;
-        state.items.push(touch(newItem({ channel: c.id, format: f, date: s })));
-        added++;
-      }));
+  // ================= events =================
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    const a = b.dataset.act, v = b.dataset.v, id = b.dataset.id;
+    const P = ui.openId;
+    switch (a) {
+      case 'view': ui.view = v; ui.expand = null; saveUI(); render(); window.scrollTo(0, 0); break;
+      case 'cf': case 'pf': case 'sf': ui[a] = v; saveUI(); render(); break;
+      case 'clear': ui.cf = ui.pf = ui.sf = 'all'; saveUI(); render(); break;
+      case 'theme': ui.theme = ui.theme === 'dark' ? 'light' : 'dark'; saveUI(); render(); break;
+      case 'plan': plan(); break;
+      case 'new': newPost(); break;
+      case 'new-at': newPost(b.dataset.d, b.dataset.c); break;
+      case 'open': openDrawer(id); break;
+      case 'all-sched': setAll(id, 'scheduled'); break;
+      case 'all-posted': setAll(id, 'posted'); break;
+      case 'kpi-posted': Object.assign(ui, { view: 'posts', sf: 'posted', pf: 'all' }); saveUI(); render(); window.scrollTo(0, 0); break;
+      case 'kpi-month': Object.assign(ui, { view: 'month', month: TODAY.slice(0, 7) }); saveUI(); render(); window.scrollTo(0, 0); break;
+      case 'kpi-overdue': Object.assign(ui, { view: 'posts', sf: 'all', pf: 'all' }); saveUI(); render(); window.scrollTo(0, 0); break;
+      case 'jump': Object.assign(ui, { view: 'posts', cf: b.dataset.c, pf: 'all', sf: b.dataset.s, q: '' }); saveUI(); render(); window.scrollTo(0, 0); break;
+      case 'm-prev': case 'm-next': { const [y, m] = ui.month.split('-').map(Number); ui.month = ds(new Date(y, m - 1 + (a === 'm-next' ? 1 : -1), 1)).slice(0, 7); ui.expand = null; render(); break; }
+      case 'm-today': ui.month = TODAY.slice(0, 7); render(); break;
+      case 'more': ui.expand = ui.expand === b.dataset.d ? null : b.dataset.d; render(); break;
+      // drawer
+      case 'd-close': closeDrawer(); break;
+      case 'd-ch': upd(P, p => {
+        p.channel = v; const c = chan(v);
+        if (!fmtOn(c, p.format)) p.format = fmtOn(c, 'short') ? 'short' : 'long';
+        if (!plats(p).some(k => pst(p, k) !== 'none')) { const defs = c.formats[p.format]?.platforms || []; PL.forEach(k => p.platforms[k] = { planned: defs.includes(k), scheduled: false, posted: false }); }
+      }); break;
+      case 'd-fmt': upd(P, p => {
+        p.format = v; const defs = chan(p.channel).formats[v]?.platforms;
+        if (defs && !plats(p).some(k => pst(p, k) !== 'none')) PL.forEach(k => p.platforms[k] = { planned: defs.includes(k), scheduled: false, posted: false });
+      }); break;
+      case 'd-pst': upd(P, p => setPst(p, b.dataset.k, v)); break;
+      case 'd-prm': upd(P, p => { p.platforms[b.dataset.k] = { planned: false, scheduled: false, posted: false }; }); break;
+      case 'd-padd': upd(P, p => setPst(p, b.dataset.k, 'none')); break;
+      case 'd-sched': setAll(P, 'scheduled'); break;
+      case 'd-posted': setAll(P, 'posted'); break;
+      case 'd-delete': {
+        const p = state.items.find(x => x.id === P);
+        if (p && !isIdea(p) && !confirm(`Delete “${p.title}”?`)) break;
+        tombstone(P); state.items = state.items.filter(x => x.id !== P); ui.openId = null; $('#drawerHost').innerHTML = ''; save(); render(); toast('Post deleted'); break;
+      }
+      // settings
+      case 's-color': updCh(b.dataset.c, c => c.color = v); break;
+      case 's-fmt': updCh(b.dataset.c, c => {
+        const f = b.dataset.f;
+        if (!c.formats[f]) c.formats[f] = { platforms: ['yt'], days: [] };
+        else c.formats[f].off = !c.formats[f].off;
+        if (FMTS.every(x => !fmtOn(c, x))) { c.formats[f].off = false; toast('A channel needs at least one format'); }
+      }); break;
+      case 's-day': updCh(b.dataset.c, c => { const F = c.formats[b.dataset.f]; F.days = F.days || []; const n = +v, i = F.days.indexOf(n); i >= 0 ? F.days.splice(i, 1) : F.days.push(n); }); break;
+      case 's-plat': updCh(b.dataset.c, c => { const A = c.formats[b.dataset.f].platforms; const i = A.indexOf(v); if (i >= 0) { if (A.length > 1) A.splice(i, 1); else toast('Keep at least one platform'); } else A.push(v); }); break;
+      case 'export': {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const el = document.createElement('a'); el.href = URL.createObjectURL(blob); el.download = `content-calendar-${TODAY}.json`; el.click();
+        setTimeout(() => URL.revokeObjectURL(el.href), 1000); toast('Backup downloaded'); break;
+      }
+      case 'delete-all':
+        if (!confirm('Delete ALL posts? Channels and settings are kept. Export a backup first if unsure.')) break;
+        state.items.forEach(i => tombstone(i.id)); state.items = []; save(); render(); toast('All posts deleted'); break;
     }
-    save(); renderAll();
-    toast(added ? `Added ${added} empty slot${added > 1 ? 's' : ''} for the next 2 weeks` : 'Next 2 weeks already planned');
-  }
-
-  // ---------- misc ----------
-  let toastT;
-  function toast(msg) {
-    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
-  }
-  function switchView(v) {
-    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
-    document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
-    if (v === 'settings') renderSettings();
-    $('#filterbar').style.display = v === 'settings' ? 'none' : '';
-    placeKnobs();
-  }
-
-  // ---------- events ----------
-  $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) switchView(b.dataset.view); });
-  $('#newBtn').addEventListener('click', () => openEditor(newItem(), true));
-  $('#planBtn').addEventListener('click', planTwoWeeks);
-  $('#channelCards').addEventListener('click', e => {
-    const b = e.target.closest('[data-jump]'); if (!b) return;
-    const [c, f, st] = b.dataset.jump.split('|');
-    VF.pf = 'all'; VF.st = st;
-    try { localStorage.setItem(FK, JSON.stringify(VF)); } catch (err) {}
-    $('#fChannel').value = c; $('#fText').value = ''; listFormat = f;
-    switchView('list'); renderAll();
-  });
-  $('#filterbar').addEventListener('click', e => {
-    const b = e.target.closest('.slider button'); if (!b) return;
-    VF[b.closest('.slider').dataset.key] = b.dataset.v;
-    try { localStorage.setItem(FK, JSON.stringify(VF)); } catch (err) {}
-    renderBoard(); renderMonth(); renderList(); placeKnobs();
-  });
-  window.addEventListener('resize', placeKnobs);
-
-  document.body.addEventListener('click', e => {
-    const chip = e.target.closest('.chip');
-    if (chip) { const it = state.items.find(i => i.id === chip.dataset.id); if (it) openEditor(it, false); return; }
-    const add = e.target.closest('[data-add]');
-    if (add) { const [c, d] = add.dataset.add.split('|'); openEditor(newItem({ ...(c ? { channel: c } : {}), date: d }), true); return; }
-    const row = e.target.closest('#listBody tr[data-id]');
-    if (row) { const it = state.items.find(i => i.id === row.dataset.id); if (it) openEditor(it, false); }
   });
 
-  $('#prevM').onclick = () => { monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1); renderMonth(); };
-  $('#nextM').onclick = () => { monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1); renderMonth(); };
-  $('#todayM').onclick = () => { monthCursor = firstOfMonth(new Date()); renderMonth(); };
-  $('#monthFilter').onchange = renderMonth;
-  ['#fText', '#fChannel'].forEach(s => $(s).addEventListener('input', renderList));
-  $('#fFmtNote').addEventListener('click', e => { if (e.target.id === 'fFmtClear') { listFormat = ''; renderList(); } });
-
-  // editor events
-  $('#eChannel').onchange = () => { draft.channel = $('#eChannel').value; fillFormats(); applyDefaultPlatforms(); renderEditorBits(); };
-  $('#eFormat').onchange = () => { draft.format = $('#eFormat').value; applyDefaultPlatforms(); renderEditorBits(); };
-  $('#eStage').onclick = e => {
-    const b = e.target.closest('[data-stage]'); if (!b) return;
-    draft.stage = b.dataset.stage;
-    if (draft.stage === 'Posted') planned(draft).forEach(p => { draft.platforms[p].posted = true; draft.platforms[p].scheduled = false; });
-    renderEditorBits();
-  };
-  $('#ePlatforms').onchange = e => {
+  // text fields: drawer saves as you type; settings save on change
+  let rt;
+  document.addEventListener('input', e => {
     const t = e.target;
-    if (t.dataset.pp) { const v = draft.platforms[t.dataset.pp]; v.planned = t.checked; if (!t.checked) { v.posted = false; v.scheduled = false; } }
-    syncStage(); renderEditorBits();
-  };
-  $('#ePlatforms').onclick = e => {
-    const b = e.target.closest('[data-ps]'); if (!b || b.disabled) return;
-    const [p, k] = b.dataset.ps.split('|'); const v = draft.platforms[p];
-    v.posted = k === 'posted'; v.scheduled = k === 'scheduled';
-    syncStage(); renderEditorBits();
-  };
-  // scheduling or posting means the video is made; posted everywhere means stage Posted
-  function syncStage() {
-    const pl = planned(draft);
-    if (pl.length && pl.every(p => draft.platforms[p].posted)) draft.stage = 'Posted';
-    else if (draft.stage === 'Posted') draft.stage = 'Ready';
-    else if (pl.some(p => draft.platforms[p].posted || draft.platforms[p].scheduled) && STAGES.indexOf(draft.stage) < STAGES.indexOf('Ready')) draft.stage = 'Ready';
-  }
-  $('#eSave').onclick = saveEditor;
-  $('#eCancel').onclick = closeEditor;
-  $('#eDelete').onclick = () => {
-    if (!confirm('Delete this post?')) return;
-    tombstone(editingId); state.items = state.items.filter(i => i.id !== editingId); save(); closeEditor(); renderAll(); toast('Deleted');
-  };
-  $('#eDup').onclick = () => {
-    const copy = structuredClone(draft);
-    copy.id = uid(); copy.date = ymd(addDays(parse(copy.date), 1)); copy.stage = 'Idea';
-    Object.values(copy.platforms).forEach(v => { v.posted = false; v.scheduled = false; });
-    closeEditor(); openEditor(copy, true);
-  };
-  $('#backdrop').addEventListener('mousedown', e => { if (e.target.id === 'backdrop') closeEditor(); });
-  document.addEventListener('keydown', e => {
-    if (!draft) return;
-    if (e.key === 'Escape') closeEditor();
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveEditor();
+    if (t.id === 'search') { ui.q = t.value; const pos = t.selectionStart; render(); const s = $('#search'); s.focus(); s.setSelectionRange(pos, pos); return; }
+    const p = state.items.find(x => x.id === ui.openId); if (!p) return;
+    const map = { dTitle: 'title', dLink: 'link', dNotes: 'notes' };
+    if (map[t.id]) { p[map[t.id]] = t.value; delete p._new; touch(p); save(); clearTimeout(rt); rt = setTimeout(render, 150); }
   });
-
-  // settings events
-  $('#settingsChannels').addEventListener('input', e => {
-    const t = e.target; if (!t.dataset.c) return;
-    chan(t.dataset.c)[t.dataset.k] = t.value; state.channelsAt = Date.now(); save();
-    renderChannelSelects(); renderStats(); renderBoard(); renderChannelCards(); renderMonth(); renderList();
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.id === 'dDateIn' && t.value) upd(ui.openId, p => p.date = t.value);
+    if (t.dataset.set) updCh(t.dataset.c, c => c[t.dataset.set] = t.value);
+    if (t.id === 'importFile') importFile(t);
   });
-  $('#settingsChannels').addEventListener('click', e => {
-    const day = e.target.closest('[data-day]'), defp = e.target.closest('[data-defp]');
-    const addf = e.target.closest('[data-addfmt]'), rmf = e.target.closest('[data-rmfmt]');
-    if (day) {
-      const [c, f, d] = day.dataset.day.split('|'); const arr = chan(c).formats[f].days; const n = +d;
-      const i = arr.indexOf(n); i >= 0 ? arr.splice(i, 1) : arr.push(n);
-    } else if (defp) {
-      const [c, f, p] = defp.dataset.defp.split('|'); const arr = chan(c).formats[f].platforms;
-      const i = arr.indexOf(p); if (i >= 0) { if (arr.length > 1) arr.splice(i, 1); } else arr.push(p);
-    } else if (addf) {
-      const [c, f] = addf.dataset.addfmt.split('|'); chan(c).formats[f] = { platforms: ['yt'], days: [] };
-    } else if (rmf) {
-      const [c, f] = rmf.dataset.rmfmt.split('|');
-      if (state.items.some(i => i.channel === c && i.format === f)) { toast('This channel still has full-length posts — delete them first'); return; }
-      delete chan(c).formats[f];
-    } else return;
-    state.channelsAt = Date.now(); save(); renderSettings(); renderAll();
-  });
-  $('#exportBtn').onclick = () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = `content-calendar-${todayStr()}.json`; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  };
-  $('#importFile').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
+  async function importFile(input) {
+    const f = input.files[0]; if (!f) return;
     try {
       const s = JSON.parse(await f.text());
       if (!Array.isArray(s.items) || !Array.isArray(s.channels)) throw new Error('bad file');
-      if (!confirm(`Import ${s.items.length} posts? They are merged into what's here; a post with the same id is replaced by the imported copy.`)) { e.target.value = ''; return; }
+      if (!confirm(`Import ${s.items.length} posts? They are merged into what's here; a post with the same id is replaced by the imported copy.`)) { input.value = ''; return; }
       const now = Date.now();
-      s.items.forEach(i => { i.updatedAt = now; delete s.deleted?.[i.id]; });
-      if (s.channels.length) s.channelsAt = now; else { s.channels = state.channels; s.channelsAt = 0; } // posts-only file keeps your channel settings
+      s.items.forEach(i => { i.updatedAt = now; });
+      if (s.channels.length) s.channelsAt = now; else { s.channels = state.channels; s.channelsAt = 0; }
       s.deleted = {};
-      state.items.forEach(i => { delete state.deleted[i.id]; });
-      state = fixState(merge(state, fixState(s))); save(); renderAll(); renderSettings(); toast(`Imported ${s.items.length} posts`);
+      s.items.forEach(i => { delete state.deleted[i.id]; });
+      state = fixState(merge(state, fixState(s))); save(); render(); toast(`Imported ${s.items.length} posts`);
     } catch (err) { toast('That file is not a content calendar export'); }
-    e.target.value = '';
-  };
-  $('#resetBtn').onclick = () => {
-    if (!confirm('Delete ALL posts? Channels and posting days are kept. Export a backup first if unsure.')) return;
-    state.items.forEach(i => tombstone(i.id)); state.items = []; save(); renderAll(); toast('All posts deleted');
-  };
-
-  // re-render at midnight / when returning to the tab so "today" stays right
-  let lastDay = todayStr();
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) return;
-    if (todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); }
-    pull();
+    input.value = '';
+  }
+  document.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toUpperCase();
+    if (e.key === 'Escape' && ui.openId) { closeDrawer(); return; }
+    if ((e.key === 'n' || e.key === 'N') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !e.metaKey && !e.ctrlKey && !e.altKey && !$('#lock').classList.contains('open')) { e.preventDefault(); newPost(); }
   });
-  setInterval(() => { if (!document.hidden) pull(); }, 60000);
 
   // passcode screen
   $('#lockForm').addEventListener('submit', async e => {
@@ -1010,10 +887,21 @@
     }
   });
 
-  renderAll();
-  if (!online) setSync('Local only', '');
+  let toastT;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+
+  // keep "today" right and pick up changes from other devices
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    if (ds(new Date()) !== TODAY) { TODAY = ds(new Date()); render(); }
+    pull();
+  });
+  setInterval(() => { if (!document.hidden) pull(); }, 60000);
+
+  render();
+  if (!online) setSync('local', 'Local only — opened from a file, not syncing');
   else if (!pass) lockOut('');
-  else { setSync('Syncing…'); pull(); }
+  else { setSync('saving', 'Syncing…'); pull(); }
 })();
 </script>
 </body>
