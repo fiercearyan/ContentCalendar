@@ -41,12 +41,19 @@ function merge(a, b) {
   const cutoff = Date.now() - 90 * 864e5;
   Object.keys(deleted).forEach(id => { if (deleted[id] < cutoff) delete deleted[id]; });
   const items = Object.values(byId).filter(it => !(deleted[it.id] >= (it.updatedAt || 0)));
+  // idea backlog: same rules as posts (newest edit wins, deletes are tombstones)
+  const ideaById = {};
+  [...(a.ideas || []), ...(b.ideas || [])].forEach(it => {
+    const cur = ideaById[it.id];
+    if (!cur || (it.updatedAt || 0) > (cur.updatedAt || 0)) ideaById[it.id] = it;
+  });
+  const ideas = Object.values(ideaById).filter(it => !(deleted[it.id] >= (it.updatedAt || 0)));
   const bNewer = (b.channelsAt || 0) >= (a.channelsAt || 0);
   return {
     version: 1,
     channels: bNewer ? b.channels : a.channels,
     channelsAt: Math.max(a.channelsAt || 0, b.channelsAt || 0),
-    items, deleted,
+    items, ideas, deleted,
   };
 }
 
